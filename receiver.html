@@ -9,10 +9,8 @@
 <style>
   :root{
     --bg:#070B14;
-    --panel:#0F1830;
     --blue:#4F6BFF;
     --violet:#9B5DE5;
-    --orange:#FF6A2B;
     --white:#F5F7FF;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
@@ -24,7 +22,6 @@
   }
   #app{position:fixed; inset:0;}
 
-  /* ---------- START SCREEN ---------- */
   #start{
     position:absolute; inset:0;
     display:flex; flex-direction:column; align-items:center; justify-content:center;
@@ -36,29 +33,20 @@
     text-align:center; padding:0 32px;
     transition:opacity .6s ease;
   }
-  #start h1{
-    font-size:clamp(22px,6vw,34px); font-weight:900; margin:0;
-    letter-spacing:.5px;
-  }
-  #start p{
-    font-size:15px; color:#A9B4D6; margin:0; max-width:320px; line-height:1.8;
-  }
+  #start h1{ font-size:clamp(22px,6vw,34px); font-weight:900; margin:0; letter-spacing:.5px; }
+  #start p{ font-size:15px; color:#A9B4D6; margin:0; max-width:320px; line-height:1.8; }
   #enterBtn{
-    font-family:'Cairo',sans-serif;
-    font-weight:700; font-size:17px; color:var(--bg);
+    font-family:'Cairo',sans-serif; font-weight:700; font-size:17px; color:var(--bg);
     background:linear-gradient(135deg,var(--blue),var(--violet));
-    border:none; border-radius:999px;
-    padding:16px 44px;
-    box-shadow:0 10px 30px rgba(79,107,255,.35);
-    cursor:pointer;
+    border:none; border-radius:999px; padding:16px 44px;
+    box-shadow:0 10px 30px rgba(79,107,255,.35); cursor:pointer;
   }
   #enterBtn:active{transform:scale(.97);}
-  .badge{
-    font-size:12px; color:#6C7AA5; border:1px solid #26305A; border-radius:999px;
-    padding:5px 14px;
-  }
+  .badge{ font-size:12px; color:#6C7AA5; border:1px solid #26305A; border-radius:999px; padding:5px 14px; }
+  #connState{ font-size:11px; color:#4A5580; }
+  #connState.ok{ color:#4FE29A; }
+  #connState.err{ color:#FF6A6A; }
 
-  /* ---------- INTRO SEQUENCE ---------- */
   #intro{
     position:absolute; inset:0; background:#000;
     display:none; align-items:center; justify-content:center;
@@ -70,13 +58,9 @@
     position:absolute; top:50%; left:50%;
     height:2px; width:2px; border-radius:2px;
     background:linear-gradient(90deg, rgba(255,138,61,0) 0%, #FFB088 40%, #FFFFFF 100%);
-    transform-origin:left center;
-    opacity:0;
+    transform-origin:left center; opacity:0;
   }
-  #introText{
-    position:relative; z-index:2; text-align:center; opacity:0;
-    transition:opacity .8s ease;
-  }
+  #introText{ position:relative; z-index:2; text-align:center; opacity:0; transition:opacity .8s ease; }
   #introText .l1{
     display:block; font-size:clamp(20px,6vw,30px); font-weight:900;
     color:var(--blue); text-shadow:0 0 20px rgba(79,107,255,.6);
@@ -87,30 +71,17 @@
     -webkit-background-clip:text; background-clip:text; color:transparent;
   }
 
-  /* ---------- STEREO / WAITING ---------- */
-  #stereo{
-    position:absolute; inset:0; display:none;
-    background:#000;
-  }
+  #stereo{ position:absolute; inset:0; display:none; background:#000; }
   #stereo.active{display:block;}
   .eye{
     position:absolute; top:0; bottom:0; width:50%;
     display:flex; align-items:center; justify-content:center;
     overflow:hidden; background:#000;
   }
-  #eyeL{left:0;}
-  #eyeR{right:0;}
-  #divider{
-    position:absolute; top:0; bottom:0; left:50%; width:1px;
-    background:rgba(255,255,255,.15); z-index:5;
-  }
-  .waitMsg{
-    color:#5A6494; font-size:13px; text-align:center; padding:0 20px; line-height:1.8;
-  }
-  .pulseDot{
-    width:8px; height:8px; border-radius:50%; margin:0 auto 14px;
-    background:var(--blue); animation:pulse 1.6s ease-in-out infinite;
-  }
+  #eyeL{left:0;} #eyeR{right:0;}
+  #divider{ position:absolute; top:0; bottom:0; left:50%; width:1px; background:rgba(255,255,255,.15); z-index:5; }
+  .waitMsg{ color:#5A6494; font-size:13px; text-align:center; padding:0 20px; line-height:1.8; }
+  .pulseDot{ width:8px; height:8px; border-radius:50%; margin:0 auto 14px; background:var(--blue); animation:pulse 1.6s ease-in-out infinite; }
   @keyframes pulse{0%,100%{opacity:.25; transform:scale(1);} 50%{opacity:1; transform:scale(1.4);}}
 
   .eyeVideoWrap{width:100%; height:100%; position:relative;}
@@ -125,8 +96,7 @@
     position:absolute; top:14px; left:14px; z-index:10;
     width:34px; height:34px; border-radius:50%; border:none;
     background:rgba(255,255,255,.08); color:#fff; font-size:16px;
-    display:flex; align-items:center; justify-content:center;
-    opacity:.5;
+    display:flex; align-items:center; justify-content:center; opacity:.5;
   }
 </style>
 </head>
@@ -138,6 +108,7 @@
     <h1>ضع الجوال داخل النظارة<br>بعد بدء التجربة</h1>
     <p>ستدخل الشاشة في وضع ملء الشاشة وتنقسم إلى عينين، بانتظار المقطع الذي يختاره المشغّل من الآيباد.</p>
     <button id="enterBtn">بدء تجربة VR</button>
+    <span id="connState">جارِ الاتصال بالخادم…</span>
   </div>
 
   <div id="intro">
@@ -157,8 +128,34 @@
 
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://www.youtube.com/iframe_api"></script>
+
 <script>
+/* =========================================================
+   1) عدّل بيانات مشروعك من Firebase Console هنا:
+   Project settings → General → Your apps → SDK setup and configuration
+   لازم تكون نفس الإعدادات بالضبط في ملف controller.html
+   ========================================================= */
+const firebaseConfig = {
+  apiKey: "ضع_API_KEY_هنا",
+  authDomain: "ضع_PROJECT_ID.firebaseapp.com",
+  databaseURL: "https://ضع_PROJECT_ID-default-rtdb.firebaseio.com",
+  projectId: "ضع_PROJECT_ID",
+  storageBucket: "ضع_PROJECT_ID.appspot.com",
+  messagingSenderId: "ضع_SENDER_ID",
+  appId: "ضع_APP_ID"
+};
+
+// اسم "الغرفة" المشتركة بين الآيباد والجوال — لازم يكون نفسه بالضبط في الملفين
+const ROOM = "vr_room_1";
+/* ========================================================= */
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const roomRef = db.ref(ROOM + "/command");
+
 (function(){
   const start = document.getElementById('start');
   const intro = document.getElementById('intro');
@@ -168,9 +165,19 @@
   const eyeL = document.getElementById('eyeL');
   const eyeR = document.getElementById('eyeR');
   const exitBtn = document.getElementById('exitBtn');
+  const connState = document.getElementById('connState');
 
   let lastTs = 0;
-  let pollTimer = null;
+
+  db.ref(".info/connected").on("value", (snap)=>{
+    if(snap.val() === true){
+      connState.textContent = "متصل بالخادم ✓";
+      connState.className = "ok";
+    }else{
+      connState.textContent = "غير متصل — تحقق من إعدادات Firebase";
+      connState.className = "err";
+    }
+  });
 
   function requestFS(){
     const el = document.documentElement;
@@ -214,8 +221,7 @@
 
   function runSpeedLines(){
     const lines = speedlines.querySelectorAll('.line');
-    lines.forEach((line,i)=>{
-      const angle = line.dataset.angle;
+    lines.forEach((line)=>{
       const len = line.dataset.len;
       const delay = Math.random()*400;
       setTimeout(()=>{
@@ -232,9 +238,7 @@
     buildSpeedLines();
     playChime();
     requestAnimationFrame(runSpeedLines);
-    setTimeout(()=>{
-      introText.style.opacity = '1';
-    }, 1300);
+    setTimeout(()=>{ introText.style.opacity = '1'; }, 1300);
     setTimeout(()=>{
       intro.style.transition = 'opacity .7s ease';
       intro.style.opacity = '0';
@@ -243,7 +247,7 @@
         intro.style.opacity='1';
         introText.style.opacity='0';
         stereo.classList.add('active');
-        startPolling();
+        listenForCommands();
       }, 700);
     }, 3400);
   }
@@ -269,22 +273,14 @@
     eyeR.innerHTML = html;
   }
 
-  async function poll(){
-    try{
-      const res = await window.storage.get('vr:queue', true);
-      if(res && res.value){
-        const data = JSON.parse(res.value);
-        if(data.ts && data.ts !== lastTs && data.videoId){
-          lastTs = data.ts;
-          playVideo(data.videoId);
-        }
+  function listenForCommands(){
+    roomRef.on('value', (snapshot)=>{
+      const data = snapshot.val();
+      if(data && data.ts && data.ts !== lastTs && data.videoId){
+        lastTs = data.ts;
+        playVideo(data.videoId);
       }
-    }catch(e){ /* no command yet */ }
-  }
-
-  function startPolling(){
-    poll();
-    pollTimer = setInterval(poll, 1200);
+    });
   }
 })();
 </script>
