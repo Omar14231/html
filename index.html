@@ -58,12 +58,14 @@
     padding:14px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px;
   }
   #roomCard .l{font-size:12px; color:var(--muted);}
-  #roomCode{font-size:15px; font-weight:800; letter-spacing:.5px; font-family:monospace; word-break:break-all;}
+  #roomCode{font-size:20px; font-weight:900; letter-spacing:2px; font-family:monospace;}
   #copyBtn{
     font-family:'Cairo',sans-serif; font-size:12px; font-weight:700; color:var(--bg);
     background:linear-gradient(135deg,var(--blue),var(--violet)); border:none; border-radius:10px;
     padding:9px 14px; cursor:pointer; white-space:nowrap;
   }
+  #connStateC{font-size:11px; color:var(--muted);}
+  #connStateC.ok{color:#4FE29A;} #connStateC.err{color:#FF6A6A;}
 
   #grid{ flex:1; display:grid; grid-template-columns:repeat(3,1fr); grid-auto-rows:1fr; gap:16px; }
   @media (max-width:700px){ #grid{grid-template-columns:repeat(2,1fr);} }
@@ -113,9 +115,9 @@
   #rJoin h1{font-size:20px; font-weight:900; margin:0;}
   #rJoin p{font-size:13px; color:#A9B4D6; margin:0; max-width:300px; line-height:1.8;}
   #roomInput{
-    font-family:monospace; font-size:15px; width:min(300px,80vw); text-align:center;
+    font-family:monospace; font-size:20px; letter-spacing:2px; width:min(240px,70vw); text-align:center;
     background:var(--panel); border:1px solid var(--line); border-radius:12px;
-    padding:14px; color:var(--white);
+    padding:14px; color:var(--white); text-transform:uppercase;
   }
   #joinBtn{
     font-family:'Cairo',sans-serif; font-weight:700; font-size:15px; color:var(--bg);
@@ -191,7 +193,7 @@
   <div id="roleSelect" class="screen active">
     <div class="badge">مركز VR</div>
     <h1>هذا الجهاز يشتغل كـ...</h1>
-    <p>اختر دور هذا الجهاز. ما فيه أي إعداد مطلوب — بس افتح على الجهازين واربطهم بكود واحد.</p>
+    <p>اختر دور هذا الجهاز. ما فيه أي حساب ولا إعداد — بس افتح على الجهازين واربطهم بكود واحد.</p>
     <button class="roleBtn" id="roleBtnController">
       <span class="t">لوحة التحكم (آيباد)</span>
       <span class="s">تختار المقطع وترسله للنظارة</span>
@@ -210,13 +212,14 @@
     <div id="roomCard">
       <div>
         <div class="l">كود الغرفة — أدخله في جهاز النظارة</div>
-        <div id="roomCode">جارِ الإنشاء…</div>
+        <div id="roomCode">——</div>
       </div>
       <button id="copyBtn">نسخ الكود</button>
     </div>
     <div id="grid"></div>
     <footer>
       <span id="status">لم يُرسل شيء بعد</span>
+      <span id="connStateC">جارِ الاتصال…</span>
     </footer>
   </div>
 
@@ -237,7 +240,7 @@
       <div class="badge">مركز VR</div>
       <h1>أدخل كود الغرفة</h1>
       <p>الكود ظاهر فوق شاشة الآيباد (لوحة التحكم) — اكتبه هنا مرة وحدة بس.</p>
-      <input id="roomInput" type="text" inputmode="text" placeholder="مثال: 5226571730043f8b22dadc20">
+      <input id="roomInput" type="text" inputmode="text" maxlength="6" placeholder="ABC123">
       <button id="joinBtn">دخول</button>
       <div id="joinError"></div>
     </div>
@@ -267,35 +270,28 @@
 
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
 <script src="https://www.youtube.com/iframe_api"></script>
 
 <script>
-const API = "https://jsonblob.com/api/jsonBlob";
-const LS_KEY = "vr_room_id";
+/* =========================================================
+   لا يوجد أي إعداد أو حساب مطلوب. الربط يتم عبر بروكر MQTT عام
+   (broker.hivemq.com) عبر WebSocket. كل جهاز يشترك بنفس "الموضوع"
+   المبني على كود الغرفة، فيوصل الأمر لحظيًا بدون أي تسجيل.
+   ========================================================= */
+const MQTT_HOST = "broker.hivemq.com";
+const MQTT_PORT = 8884;
+const TOPIC_PREFIX = "vr-center-app/";
+const LS_KEY = "vr_room_code";
 
-async function createRoom(){
-  const res = await fetch(API, {
-    method: "POST",
-    headers: { "Content-Type":"application/json", "Accept":"application/json" },
-    body: JSON.stringify({ videoId:null, ts:0 })
-  });
-  if(!res.ok) throw new Error("create failed");
-  const loc = res.headers.get("Location");
-  return loc.split("/").pop();
+function genRoomCode(){
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let out = "";
+  for(let i=0;i<6;i++){ out += chars[Math.floor(Math.random()*chars.length)]; }
+  return out;
 }
-async function writeRoom(id, data){
-  const res = await fetch(`${API}/${id}`, {
-    method:"PUT",
-    headers:{ "Content-Type":"application/json", "Accept":"application/json" },
-    body: JSON.stringify(data)
-  });
-  if(!res.ok) throw new Error("write failed");
-  return res.json();
-}
-async function readRoom(id){
-  const res = await fetch(`${API}/${id}`, { headers:{ "Accept":"application/json" } });
-  if(!res.ok) throw new Error("read failed");
-  return res.json();
+function makeClientId(){
+  return "vr_" + Math.random().toString(16).slice(2) + Date.now().toString(16);
 }
 
 const clips = [
@@ -321,27 +317,42 @@ document.getElementById('roleBtnReceiver').addEventListener('click', ()=>{
   initReceiverJoin();
 });
 
-async function initController(){
+/* ================= CONTROLLER ================= */
+function initController(){
   const roomCodeEl = document.getElementById('roomCode');
   const copyBtn = document.getElementById('copyBtn');
   const grid = document.getElementById('grid');
   const status = document.getElementById('status');
+  const connState = document.getElementById('connStateC');
   const modalBg = document.getElementById('modalBg');
   const yesBtn = document.getElementById('yesBtn');
   const noBtn = document.getElementById('noBtn');
   let pending = null;
-  let roomId = null;
 
-  try{
-    roomId = await createRoom();
-    roomCodeEl.textContent = roomId;
-  }catch(e){
-    roomCodeEl.textContent = "تعذّر إنشاء الغرفة — تحقق من الإنترنت وحدّث الصفحة";
-  }
+  const roomCode = genRoomCode();
+  roomCodeEl.textContent = roomCode;
+  const topic = TOPIC_PREFIX + roomCode;
+
+  const client = new Paho.MQTT.Client(MQTT_HOST, MQTT_PORT, makeClientId());
+  client.onConnectionLost = ()=>{
+    connState.textContent = "انقطع الاتصال — يعيد المحاولة…";
+    connState.className = "err";
+  };
+  client.connect({
+    useSSL: true,
+    timeout: 8,
+    onSuccess: ()=>{
+      connState.textContent = "متصل بالخادم ✓";
+      connState.className = "ok";
+    },
+    onFailure: ()=>{
+      connState.textContent = "تعذّر الاتصال — تحقق من الإنترنت وحدّث الصفحة";
+      connState.className = "err";
+    }
+  });
 
   copyBtn.addEventListener('click', ()=>{
-    if(!roomId) return;
-    navigator.clipboard.writeText(roomId).then(()=>{
+    navigator.clipboard.writeText(roomCode).then(()=>{
       copyBtn.textContent = "تم النسخ ✓";
       setTimeout(()=>{ copyBtn.textContent = "نسخ الكود"; }, 1500);
     });
@@ -371,20 +382,24 @@ async function initController(){
     pending = null;
   });
 
-  yesBtn.addEventListener('click', async ()=>{
-    if(!pending || !roomId) return;
+  yesBtn.addEventListener('click', ()=>{
+    if(!pending) return;
     try{
-      await writeRoom(roomId, { videoId: pending.id, ts: Date.now() });
+      const payload = JSON.stringify({ videoId: pending.id, ts: Date.now() });
+      const message = new Paho.MQTT.Message(payload);
+      message.destinationName = topic;
+      client.send(message);
       status.textContent = `تم إرسال «${pending.label}» إلى النظارة ✓`;
       status.classList.add('ok'); status.classList.remove('err');
     }catch(e){
-      status.textContent = 'تعذّر الإرسال — تحقق من الإنترنت وحاول مرة أخرى';
+      status.textContent = 'تعذّر الإرسال — تأكد إن الاتصال متصل فوق';
       status.classList.add('err'); status.classList.remove('ok');
     }
     modalBg.classList.remove('show');
   });
 }
 
+/* ================= RECEIVER: JOIN ================= */
 function initReceiverJoin(){
   const rJoin = document.getElementById('rJoin');
   const roomInput = document.getElementById('roomInput');
@@ -392,27 +407,19 @@ function initReceiverJoin(){
   const joinError = document.getElementById('joinError');
 
   const saved = localStorage.getItem(LS_KEY);
-  if(saved){
-    roomInput.value = saved;
-  }
+  if(saved) roomInput.value = saved;
 
-  joinBtn.addEventListener('click', async ()=>{
-    const id = roomInput.value.trim();
-    if(!id){ joinError.textContent = "اكتب الكود أول"; return; }
-    joinBtn.textContent = "جارِ التحقق…";
-    try{
-      await readRoom(id);
-      localStorage.setItem(LS_KEY, id);
-      rJoin.classList.remove('active');
-      initReceiverExperience(id);
-    }catch(e){
-      joinError.textContent = "الكود غلط أو الغرفة ما موجودة — تأكد منه وجرب مرة ثانية";
-      joinBtn.textContent = "دخول";
-    }
+  joinBtn.addEventListener('click', ()=>{
+    const code = roomInput.value.trim().toUpperCase();
+    if(!code){ joinError.textContent = "اكتب الكود أول"; return; }
+    localStorage.setItem(LS_KEY, code);
+    rJoin.classList.remove('active');
+    initReceiverExperience(code);
   });
 }
 
-function initReceiverExperience(roomId){
+/* ================= RECEIVER: EXPERIENCE ================= */
+function initReceiverExperience(roomCode){
   const rStart = document.getElementById('rStart');
   const rIntro = document.getElementById('rIntro');
   const rStereo = document.getElementById('rStereo');
@@ -421,10 +428,27 @@ function initReceiverExperience(roomId){
   const eyeL = document.getElementById('eyeL');
   const eyeR = document.getElementById('eyeR');
   const exitBtn = document.getElementById('exitBtn');
+  const topic = TOPIC_PREFIX + roomCode;
   let lastTs = 0;
-  let pollTimer = null;
 
   rStart.classList.add('active');
+
+  const client = new Paho.MQTT.Client(MQTT_HOST, MQTT_PORT, makeClientId());
+  client.onMessageArrived = (message)=>{
+    try{
+      const data = JSON.parse(message.payloadString);
+      if(data && data.ts && data.ts !== lastTs && data.videoId){
+        lastTs = data.ts;
+        playVideo(data.videoId);
+      }
+    }catch(e){}
+  };
+  client.connect({
+    useSSL: true,
+    timeout: 8,
+    onSuccess: ()=>{ client.subscribe(topic); },
+    onFailure: ()=>{}
+  });
 
   function requestFS(){
     const el = document.documentElement;
@@ -489,7 +513,6 @@ function initReceiverExperience(roomId){
         rIntro.style.opacity='1';
         introText.style.opacity='0';
         rStereo.classList.add('active');
-        startPolling();
       }, 700);
     }, 3400);
   }
@@ -502,7 +525,6 @@ function initReceiverExperience(roomId){
 
   exitBtn.addEventListener('click', ()=>{
     if(document.fullscreenElement) document.exitFullscreen();
-    if(pollTimer) clearInterval(pollTimer);
     location.reload();
   });
 
@@ -512,20 +534,6 @@ function initReceiverExperience(roomId){
   function playVideo(videoId){
     const html = `<div class="eyeVideoWrap"><iframe src="${ytEmbedUrl(videoId)}" allow="autoplay; fullscreen" allowfullscreen></iframe></div>`;
     eyeL.innerHTML = html; eyeR.innerHTML = html;
-  }
-
-  async function poll(){
-    try{
-      const data = await readRoom(roomId);
-      if(data && data.ts && data.ts !== lastTs && data.videoId){
-        lastTs = data.ts;
-        playVideo(data.videoId);
-      }
-    }catch(e){ /* تجاهل فشل مؤقت بالشبكة */ }
-  }
-  function startPolling(){
-    poll();
-    pollTimer = setInterval(poll, 1200);
   }
 }
 </script>
