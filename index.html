@@ -27,7 +27,6 @@
   .screen{position:absolute; inset:0; display:none;}
   .screen.active{display:flex;}
 
-  /* ---------- ROLE SELECT ---------- */
   #roleSelect{
     flex-direction:column; align-items:center; justify-content:center; gap:18px;
     background:
@@ -49,11 +48,23 @@
   #roleBtnController{border-color:var(--blue);}
   #roleBtnReceiver{border-color:var(--violet);}
 
-  /* ================= CONTROLLER ================= */
-  #controllerView{flex-direction:column; padding:28px 32px; gap:22px;}
+  #controllerView{flex-direction:column; padding:24px 28px; gap:16px;}
   #controllerView header{display:flex; flex-direction:column; gap:4px;}
   #controllerView header .kicker{font-size:12px; color:var(--muted);}
-  #controllerView header h1{margin:0; font-size:22px; font-weight:900;}
+  #controllerView header h1{margin:0; font-size:20px; font-weight:900;}
+
+  #roomCard{
+    background:var(--panel); border:1px solid var(--line); border-radius:16px;
+    padding:14px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px;
+  }
+  #roomCard .l{font-size:12px; color:var(--muted);}
+  #roomCode{font-size:15px; font-weight:800; letter-spacing:.5px; font-family:monospace; word-break:break-all;}
+  #copyBtn{
+    font-family:'Cairo',sans-serif; font-size:12px; font-weight:700; color:var(--bg);
+    background:linear-gradient(135deg,var(--blue),var(--violet)); border:none; border-radius:10px;
+    padding:9px 14px; cursor:pointer; white-space:nowrap;
+  }
+
   #grid{ flex:1; display:grid; grid-template-columns:repeat(3,1fr); grid-auto-rows:1fr; gap:16px; }
   @media (max-width:700px){ #grid{grid-template-columns:repeat(2,1fr);} }
   .clip{
@@ -70,8 +81,6 @@
   #controllerView footer{display:flex; align-items:center; justify-content:space-between;}
   #status{font-size:13px; color:var(--muted);}
   #status.ok{color:#7CE29A;} #status.err{color:#FF6A6A;}
-  #connStateC{font-size:11px; color:var(--muted);}
-  #connStateC.ok{color:#4FE29A;} #connStateC.err{color:#FF6A6A;}
 
   #modalBg{
     position:fixed; inset:0; background:rgba(4,6,14,.72);
@@ -93,7 +102,28 @@
   #yesBtn{background:linear-gradient(135deg,var(--blue),var(--violet)); color:#fff;}
   #noBtn{background:transparent; border:1px solid var(--line); color:#C7CEE8;}
 
-  /* ================= RECEIVER ================= */
+  #rJoin{
+    position:absolute; inset:0; flex-direction:column; align-items:center; justify-content:center; gap:16px;
+    background:
+      radial-gradient(circle at 50% 30%, rgba(79,107,255,0.22), transparent 60%),
+      radial-gradient(circle at 50% 80%, rgba(155,93,229,0.16), transparent 55%),
+      var(--bg);
+    text-align:center; padding:0 32px;
+  }
+  #rJoin h1{font-size:20px; font-weight:900; margin:0;}
+  #rJoin p{font-size:13px; color:#A9B4D6; margin:0; max-width:300px; line-height:1.8;}
+  #roomInput{
+    font-family:monospace; font-size:15px; width:min(300px,80vw); text-align:center;
+    background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    padding:14px; color:var(--white);
+  }
+  #joinBtn{
+    font-family:'Cairo',sans-serif; font-weight:700; font-size:15px; color:var(--bg);
+    background:linear-gradient(135deg,var(--blue),var(--violet));
+    border:none; border-radius:999px; padding:14px 36px; cursor:pointer;
+  }
+  #joinError{font-size:12px; color:#FF6A6A; min-height:16px;}
+
   #receiverView{position:absolute; inset:0;}
   #rStart{
     position:absolute; inset:0; flex-direction:column; align-items:center; justify-content:center; gap:26px;
@@ -111,8 +141,6 @@
     border:none; border-radius:999px; padding:15px 40px;
     box-shadow:0 10px 30px rgba(79,107,255,.35); cursor:pointer;
   }
-  #connStateR{ font-size:11px; color:#4A5580; }
-  #connStateR.ok{ color:#4FE29A; } #connStateR.err{ color:#FF6A6A; }
 
   #rIntro{
     position:absolute; inset:0; background:#000;
@@ -163,7 +191,7 @@
   <div id="roleSelect" class="screen active">
     <div class="badge">مركز VR</div>
     <h1>هذا الجهاز يشتغل كـ...</h1>
-    <p>اختر دور هذا الجهاز. استخدم هذا الرابط نفسه على الجهازين، وكل واحد يختار دوره.</p>
+    <p>اختر دور هذا الجهاز. ما فيه أي إعداد مطلوب — بس افتح على الجهازين واربطهم بكود واحد.</p>
     <button class="roleBtn" id="roleBtnController">
       <span class="t">لوحة التحكم (آيباد)</span>
       <span class="s">تختار المقطع وترسله للنظارة</span>
@@ -174,16 +202,21 @@
     </button>
   </div>
 
-  <!-- ================= CONTROLLER ================= -->
   <div id="controllerView" class="screen">
     <header>
       <span class="kicker">لوحة التحكم</span>
       <h1>اختر المقطع لعرضه في النظارة</h1>
     </header>
+    <div id="roomCard">
+      <div>
+        <div class="l">كود الغرفة — أدخله في جهاز النظارة</div>
+        <div id="roomCode">جارِ الإنشاء…</div>
+      </div>
+      <button id="copyBtn">نسخ الكود</button>
+    </div>
     <div id="grid"></div>
     <footer>
       <span id="status">لم يُرسل شيء بعد</span>
-      <span id="connStateC">جارِ الاتصال بالخادم…</span>
     </footer>
   </div>
 
@@ -198,14 +231,22 @@
     </div>
   </div>
 
-  <!-- ================= RECEIVER ================= -->
   <div id="receiverView" class="screen">
-    <div id="rStart" class="screen active" style="display:flex;">
+
+    <div id="rJoin" class="screen active" style="display:flex;">
+      <div class="badge">مركز VR</div>
+      <h1>أدخل كود الغرفة</h1>
+      <p>الكود ظاهر فوق شاشة الآيباد (لوحة التحكم) — اكتبه هنا مرة وحدة بس.</p>
+      <input id="roomInput" type="text" inputmode="text" placeholder="مثال: 5226571730043f8b22dadc20">
+      <button id="joinBtn">دخول</button>
+      <div id="joinError"></div>
+    </div>
+
+    <div id="rStart" class="screen">
       <div class="badge">مركز VR</div>
       <h1>ضع الجوال داخل النظارة<br>بعد بدء التجربة</h1>
       <p>ستدخل الشاشة في وضع ملء الشاشة وتنقسم إلى عينين، بانتظار المقطع الذي يختاره المشغّل من الآيباد.</p>
       <button id="enterBtn">بدء تجربة VR</button>
-      <span id="connStateR">جارِ الاتصال بالخادم…</span>
     </div>
 
     <div id="rIntro">
@@ -226,30 +267,36 @@
 
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://www.youtube.com/iframe_api"></script>
 
 <script>
-/* =========================================================
-   عدّل بيانات مشروعك من Firebase Console هنا (مكان واحد بس الآن):
-   Project settings → General → Your apps → SDK setup and configuration
-   ========================================================= */
-const firebaseConfig = {
-  apiKey: "ضع_API_KEY_هنا",
-  authDomain: "ضع_PROJECT_ID.firebaseapp.com",
-  databaseURL: "https://ضع_PROJECT_ID-default-rtdb.firebaseio.com",
-  projectId: "ضع_PROJECT_ID",
-  storageBucket: "ضع_PROJECT_ID.appspot.com",
-  messagingSenderId: "ضع_SENDER_ID",
-  appId: "ضع_APP_ID"
-};
-const ROOM = "vr_room_1";
-/* ========================================================= */
+const API = "https://jsonblob.com/api/jsonBlob";
+const LS_KEY = "vr_room_id";
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-const roomRef = db.ref(ROOM + "/command");
+async function createRoom(){
+  const res = await fetch(API, {
+    method: "POST",
+    headers: { "Content-Type":"application/json", "Accept":"application/json" },
+    body: JSON.stringify({ videoId:null, ts:0 })
+  });
+  if(!res.ok) throw new Error("create failed");
+  const loc = res.headers.get("Location");
+  return loc.split("/").pop();
+}
+async function writeRoom(id, data){
+  const res = await fetch(`${API}/${id}`, {
+    method:"PUT",
+    headers:{ "Content-Type":"application/json", "Accept":"application/json" },
+    body: JSON.stringify(data)
+  });
+  if(!res.ok) throw new Error("write failed");
+  return res.json();
+}
+async function readRoom(id){
+  const res = await fetch(`${API}/${id}`, { headers:{ "Accept":"application/json" } });
+  if(!res.ok) throw new Error("read failed");
+  return res.json();
+}
 
 const clips = [
   { id:'AWbPfVlsWq0', label:'المقطع ١', grad:['#4F6BFF','#8A5CFF'] },
@@ -259,7 +306,6 @@ const clips = [
   { id:'axnVIBb_FyU', label:'المقطع ٥', grad:['#FFB020','#FF4B4B'] },
 ];
 
-/* ---------- Role select ---------- */
 const roleSelect = document.getElementById('roleSelect');
 const controllerView = document.getElementById('controllerView');
 const receiverView = document.getElementById('receiverView');
@@ -272,22 +318,33 @@ document.getElementById('roleBtnController').addEventListener('click', ()=>{
 document.getElementById('roleBtnReceiver').addEventListener('click', ()=>{
   roleSelect.classList.remove('active');
   receiverView.classList.add('active');
-  initReceiver();
+  initReceiverJoin();
 });
 
-/* ================= CONTROLLER LOGIC ================= */
-function initController(){
+async function initController(){
+  const roomCodeEl = document.getElementById('roomCode');
+  const copyBtn = document.getElementById('copyBtn');
   const grid = document.getElementById('grid');
   const status = document.getElementById('status');
-  const connState = document.getElementById('connStateC');
   const modalBg = document.getElementById('modalBg');
   const yesBtn = document.getElementById('yesBtn');
   const noBtn = document.getElementById('noBtn');
   let pending = null;
+  let roomId = null;
 
-  db.ref(".info/connected").on("value", (snap)=>{
-    if(snap.val() === true){ connState.textContent = "متصل بالخادم ✓"; connState.className = "ok"; }
-    else{ connState.textContent = "غير متصل — تحقق من إعدادات Firebase"; connState.className = "err"; }
+  try{
+    roomId = await createRoom();
+    roomCodeEl.textContent = roomId;
+  }catch(e){
+    roomCodeEl.textContent = "تعذّر إنشاء الغرفة — تحقق من الإنترنت وحدّث الصفحة";
+  }
+
+  copyBtn.addEventListener('click', ()=>{
+    if(!roomId) return;
+    navigator.clipboard.writeText(roomId).then(()=>{
+      copyBtn.textContent = "تم النسخ ✓";
+      setTimeout(()=>{ copyBtn.textContent = "نسخ الكود"; }, 1500);
+    });
   });
 
   clips.forEach((c,i)=>{
@@ -315,21 +372,47 @@ function initController(){
   });
 
   yesBtn.addEventListener('click', async ()=>{
-    if(!pending) return;
+    if(!pending || !roomId) return;
     try{
-      await roomRef.set({ videoId: pending.id, ts: Date.now() });
+      await writeRoom(roomId, { videoId: pending.id, ts: Date.now() });
       status.textContent = `تم إرسال «${pending.label}» إلى النظارة ✓`;
       status.classList.add('ok'); status.classList.remove('err');
     }catch(e){
-      status.textContent = 'تعذّر الإرسال — تحقق من إعدادات Firebase';
+      status.textContent = 'تعذّر الإرسال — تحقق من الإنترنت وحاول مرة أخرى';
       status.classList.add('err'); status.classList.remove('ok');
     }
     modalBg.classList.remove('show');
   });
 }
 
-/* ================= RECEIVER LOGIC ================= */
-function initReceiver(){
+function initReceiverJoin(){
+  const rJoin = document.getElementById('rJoin');
+  const roomInput = document.getElementById('roomInput');
+  const joinBtn = document.getElementById('joinBtn');
+  const joinError = document.getElementById('joinError');
+
+  const saved = localStorage.getItem(LS_KEY);
+  if(saved){
+    roomInput.value = saved;
+  }
+
+  joinBtn.addEventListener('click', async ()=>{
+    const id = roomInput.value.trim();
+    if(!id){ joinError.textContent = "اكتب الكود أول"; return; }
+    joinBtn.textContent = "جارِ التحقق…";
+    try{
+      await readRoom(id);
+      localStorage.setItem(LS_KEY, id);
+      rJoin.classList.remove('active');
+      initReceiverExperience(id);
+    }catch(e){
+      joinError.textContent = "الكود غلط أو الغرفة ما موجودة — تأكد منه وجرب مرة ثانية";
+      joinBtn.textContent = "دخول";
+    }
+  });
+}
+
+function initReceiverExperience(roomId){
   const rStart = document.getElementById('rStart');
   const rIntro = document.getElementById('rIntro');
   const rStereo = document.getElementById('rStereo');
@@ -338,13 +421,10 @@ function initReceiver(){
   const eyeL = document.getElementById('eyeL');
   const eyeR = document.getElementById('eyeR');
   const exitBtn = document.getElementById('exitBtn');
-  const connState = document.getElementById('connStateR');
   let lastTs = 0;
+  let pollTimer = null;
 
-  db.ref(".info/connected").on("value", (snap)=>{
-    if(snap.val() === true){ connState.textContent = "متصل بالخادم ✓"; connState.className = "ok"; }
-    else{ connState.textContent = "غير متصل — تحقق من إعدادات Firebase"; connState.className = "err"; }
-  });
+  rStart.classList.add('active');
 
   function requestFS(){
     const el = document.documentElement;
@@ -409,7 +489,7 @@ function initReceiver(){
         rIntro.style.opacity='1';
         introText.style.opacity='0';
         rStereo.classList.add('active');
-        listenForCommands();
+        startPolling();
       }, 700);
     }, 3400);
   }
@@ -422,6 +502,7 @@ function initReceiver(){
 
   exitBtn.addEventListener('click', ()=>{
     if(document.fullscreenElement) document.exitFullscreen();
+    if(pollTimer) clearInterval(pollTimer);
     location.reload();
   });
 
@@ -432,14 +513,19 @@ function initReceiver(){
     const html = `<div class="eyeVideoWrap"><iframe src="${ytEmbedUrl(videoId)}" allow="autoplay; fullscreen" allowfullscreen></iframe></div>`;
     eyeL.innerHTML = html; eyeR.innerHTML = html;
   }
-  function listenForCommands(){
-    roomRef.on('value', (snapshot)=>{
-      const data = snapshot.val();
+
+  async function poll(){
+    try{
+      const data = await readRoom(roomId);
       if(data && data.ts && data.ts !== lastTs && data.videoId){
         lastTs = data.ts;
         playVideo(data.videoId);
       }
-    });
+    }catch(e){ /* تجاهل فشل مؤقت بالشبكة */ }
+  }
+  function startPolling(){
+    poll();
+    pollTimer = setInterval(poll, 1200);
   }
 }
 </script>
