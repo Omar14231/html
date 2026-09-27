@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>مركز VR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#070B14;
+    --panel:#101a33;
+    --blue:#4F6BFF;
+    --violet:#9B5DE5;
+    --orange:#FF6A2B;
+    --line:#1E2A4D;
+    --muted:#7480A6;
+    --white:#F5F7FF;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{
+    margin:0; padding:0; height:100%; width:100%;
+    background:var(--bg); color:var(--white);
+    font-family:'Cairo',sans-serif; overflow:hidden; overscroll-behavior:none;
+  }
+  #app{position:fixed; inset:0;}
+  .screen{position:absolute; inset:0; display:none;}
+  .screen.active{display:flex;}
+
+  /* ---------- ROLE SELECT ---------- */
+  #roleSelect{
+    flex-direction:column; align-items:center; justify-content:center; gap:18px;
+    background:
+      radial-gradient(circle at 50% 30%, rgba(79,107,255,0.22), transparent 60%),
+      radial-gradient(circle at 50% 80%, rgba(155,93,229,0.16), transparent 55%),
+      var(--bg);
+    text-align:center; padding:0 32px;
+  }
+  #roleSelect .badge{ font-size:12px; color:#6C7AA5; border:1px solid #26305A; border-radius:999px; padding:5px 14px; }
+  #roleSelect h1{ font-size:clamp(20px,5.5vw,28px); font-weight:900; margin:6px 0 4px; }
+  #roleSelect p{ font-size:13px; color:#A9B4D6; margin:0 0 10px; max-width:320px; line-height:1.8; }
+  .roleBtn{
+    font-family:'Cairo',sans-serif; width:min(300px,80vw); font-weight:700; font-size:16px; color:var(--white);
+    background:var(--panel); border:1px solid var(--line); border-radius:16px;
+    padding:18px 20px; cursor:pointer; text-align:right;
+  }
+  .roleBtn .t{display:block; font-size:16px; font-weight:800;}
+  .roleBtn .s{display:block; font-size:12px; color:var(--muted); margin-top:4px; font-weight:400;}
+  #roleBtnController{border-color:var(--blue);}
+  #roleBtnReceiver{border-color:var(--violet);}
+
+  /* ================= CONTROLLER ================= */
+  #controllerView{flex-direction:column; padding:28px 32px; gap:22px;}
+  #controllerView header{display:flex; flex-direction:column; gap:4px;}
+  #controllerView header .kicker{font-size:12px; color:var(--muted);}
+  #controllerView header h1{margin:0; font-size:22px; font-weight:900;}
+  #grid{ flex:1; display:grid; grid-template-columns:repeat(3,1fr); grid-auto-rows:1fr; gap:16px; }
+  @media (max-width:700px){ #grid{grid-template-columns:repeat(2,1fr);} }
+  .clip{
+    position:relative; border-radius:20px; border:1px solid var(--line);
+    overflow:hidden; cursor:pointer; display:flex; flex-direction:column;
+    justify-content:flex-end; padding:16px; min-height:110px;
+    transition:transform .15s ease;
+  }
+  .clip:active{transform:scale(.97);}
+  .clip .num{ position:absolute; top:14px; right:16px; font-size:13px; color:rgba(255,255,255,.7); }
+  .clip .label{font-size:16px; font-weight:700; position:relative; z-index:2;}
+  .clip .sub{font-size:11px; color:rgba(255,255,255,.65); position:relative; z-index:2;}
+  .clip.selected{outline:2px solid #fff;}
+  #controllerView footer{display:flex; align-items:center; justify-content:space-between;}
+  #status{font-size:13px; color:var(--muted);}
+  #status.ok{color:#7CE29A;} #status.err{color:#FF6A6A;}
+  #connStateC{font-size:11px; color:var(--muted);}
+  #connStateC.ok{color:#4FE29A;} #connStateC.err{color:#FF6A6A;}
+
+  #modalBg{
+    position:fixed; inset:0; background:rgba(4,6,14,.72);
+    display:none; align-items:center; justify-content:center; z-index:50;
+    backdrop-filter:blur(4px);
+  }
+  #modalBg.show{display:flex;}
+  #modal{
+    background:var(--panel); border:1px solid var(--line); border-radius:22px;
+    padding:32px 28px; width:min(360px,86vw); text-align:center;
+  }
+  #modal h2{margin:0 0 10px; font-size:19px; font-weight:900;}
+  #modal p{margin:0 0 24px; font-size:13px; color:var(--muted); line-height:1.7;}
+  .modalBtns{display:flex; gap:12px;}
+  .modalBtns button{
+    flex:1; font-family:'Cairo',sans-serif; font-weight:700; font-size:15px;
+    padding:13px 0; border-radius:12px; border:none; cursor:pointer;
+  }
+  #yesBtn{background:linear-gradient(135deg,var(--blue),var(--violet)); color:#fff;}
+  #noBtn{background:transparent; border:1px solid var(--line); color:#C7CEE8;}
+
+  /* ================= RECEIVER ================= */
+  #receiverView{position:absolute; inset:0;}
+  #rStart{
+    position:absolute; inset:0; flex-direction:column; align-items:center; justify-content:center; gap:26px;
+    background:
+      radial-gradient(circle at 50% 30%, rgba(79,107,255,0.25), transparent 60%),
+      radial-gradient(circle at 50% 80%, rgba(155,93,229,0.18), transparent 55%),
+      var(--bg);
+    text-align:center; padding:0 32px; transition:opacity .6s ease;
+  }
+  #rStart h1{ font-size:clamp(20px,5.5vw,30px); font-weight:900; margin:0; }
+  #rStart p{ font-size:14px; color:#A9B4D6; margin:0; max-width:300px; line-height:1.8; }
+  #enterBtn{
+    font-family:'Cairo',sans-serif; font-weight:700; font-size:16px; color:var(--bg);
+    background:linear-gradient(135deg,var(--blue),var(--violet));
+    border:none; border-radius:999px; padding:15px 40px;
+    box-shadow:0 10px 30px rgba(79,107,255,.35); cursor:pointer;
+  }
+  #connStateR{ font-size:11px; color:#4A5580; }
+  #connStateR.ok{ color:#4FE29A; } #connStateR.err{ color:#FF6A6A; }
+
+  #rIntro{
+    position:absolute; inset:0; background:#000;
+    display:none; align-items:center; justify-content:center; overflow:hidden;
+  }
+  #rIntro.active{display:flex;}
+  #speedlines{position:absolute; inset:0;}
+  .line{
+    position:absolute; top:50%; left:50%; height:2px; width:2px; border-radius:2px;
+    background:linear-gradient(90deg, rgba(255,138,61,0) 0%, #FFB088 40%, #FFFFFF 100%);
+    transform-origin:left center; opacity:0;
+  }
+  #introText{ position:relative; z-index:2; text-align:center; opacity:0; transition:opacity .8s ease; }
+  #introText .l1{
+    display:block; font-size:clamp(20px,6vw,30px); font-weight:900;
+    color:var(--blue); text-shadow:0 0 20px rgba(79,107,255,.6);
+  }
+  #introText .l2{
+    display:block; margin-top:10px; font-size:clamp(16px,4.5vw,22px); font-weight:700;
+    background:linear-gradient(90deg,var(--violet),#C9A8FF);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+
+  #rStereo{ position:absolute; inset:0; display:none; background:#000; }
+  #rStereo.active{display:block;}
+  .eye{
+    position:absolute; top:0; bottom:0; width:50%;
+    display:flex; align-items:center; justify-content:center; overflow:hidden; background:#000;
+  }
+  #eyeL{left:0;} #eyeR{right:0;}
+  #divider{ position:absolute; top:0; bottom:0; left:50%; width:1px; background:rgba(255,255,255,.15); z-index:5; }
+  .waitMsg{ color:#5A6494; font-size:13px; text-align:center; padding:0 20px; line-height:1.8; }
+  .pulseDot{ width:8px; height:8px; border-radius:50%; margin:0 auto 14px; background:var(--blue); animation:pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse{0%,100%{opacity:.25; transform:scale(1);} 50%{opacity:1; transform:scale(1.4);}}
+  .eyeVideoWrap{width:100%; height:100%; position:relative;}
+  .eyeVideoWrap iframe{ position:absolute; top:50%; left:50%; width:180%; height:100%; transform:translate(-50%,-50%); border:none; }
+  #exitBtn{
+    position:absolute; top:14px; left:14px; z-index:10;
+    width:34px; height:34px; border-radius:50%; border:none;
+    background:rgba(255,255,255,.08); color:#fff; font-size:16px;
+    display:flex; align-items:center; justify-content:center; opacity:.5;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="roleSelect" class="screen active">
+    <div class="badge">مركز VR</div>
+    <h1>هذا الجهاز يشتغل كـ...</h1>
+    <p>اختر دور هذا الجهاز. استخدم هذا الرابط نفسه على الجهازين، وكل واحد يختار دوره.</p>
+    <button class="roleBtn" id="roleBtnController">
+      <span class="t">لوحة التحكم (آيباد)</span>
+      <span class="s">تختار المقطع وترسله للنظارة</span>
+    </button>
+    <button class="roleBtn" id="roleBtnReceiver">
+      <span class="t">شاشة العرض (جوال داخل النظارة)</span>
+      <span class="s">تعرض المقدمة والفيديو بوضع VR</span>
+    </button>
+  </div>
+
+  <!-- ================= CONTROLLER ================= -->
+  <div id="controllerView" class="screen">
+    <header>
+      <span class="kicker">لوحة التحكم</span>
+      <h1>اختر المقطع لعرضه في النظارة</h1>
+    </header>
+    <div id="grid"></div>
+    <footer>
+      <span id="status">لم يُرسل شيء بعد</span>
+      <span id="connStateC">جارِ الاتصال بالخادم…</span>
+    </footer>
+  </div>
+
+  <div id="modalBg">
+    <div id="modal">
+      <h2>هل المستخدم يستخدم نظارة VR؟</h2>
+      <p>سيتم تشغيل المقدمة ثم المقطع مباشرة على شاشة الجوال داخل النظارة.</p>
+      <div class="modalBtns">
+        <button id="noBtn">لا</button>
+        <button id="yesBtn">نعم، تشغيل</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= RECEIVER ================= -->
+  <div id="receiverView" class="screen">
+    <div id="rStart" class="screen active" style="display:flex;">
+      <div class="badge">مركز VR</div>
+      <h1>ضع الجوال داخل النظارة<br>بعد بدء التجربة</h1>
+      <p>ستدخل الشاشة في وضع ملء الشاشة وتنقسم إلى عينين، بانتظار المقطع الذي يختاره المشغّل من الآيباد.</p>
+      <button id="enterBtn">بدء تجربة VR</button>
+      <span id="connStateR">جارِ الاتصال بالخادم…</span>
+    </div>
+
+    <div id="rIntro">
+      <div id="speedlines"></div>
+      <div id="introText">
+        <span class="l1">شكراً لتجربتك</span>
+        <span class="l2">هنا نبدأ في مركز VR</span>
+      </div>
+    </div>
+
+    <div id="rStereo">
+      <button id="exitBtn">✕</button>
+      <div class="eye" id="eyeL"><div class="waitMsg" id="msgL"><div class="pulseDot"></div>بانتظار المقطع…</div></div>
+      <div class="eye" id="eyeR"><div class="waitMsg" id="msgR"><div class="pulseDot"></div>بانتظار المقطع…</div></div>
+      <div id="divider"></div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.youtube.com/iframe_api"></script>
+
+<script>
+/* =========================================================
+   عدّل بيانات مشروعك من Firebase Console هنا (مكان واحد بس الآن):
+   Project settings → General → Your apps → SDK setup and configuration
+   ========================================================= */
+const firebaseConfig = {
+  apiKey: "ضع_API_KEY_هنا",
+  authDomain: "ضع_PROJECT_ID.firebaseapp.com",
+  databaseURL: "https://ضع_PROJECT_ID-default-rtdb.firebaseio.com",
+  projectId: "ضع_PROJECT_ID",
+  storageBucket: "ضع_PROJECT_ID.appspot.com",
+  messagingSenderId: "ضع_SENDER_ID",
+  appId: "ضع_APP_ID"
+};
+const ROOM = "vr_room_1";
+/* ========================================================= */
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const roomRef = db.ref(ROOM + "/command");
+
+const clips = [
+  { id:'AWbPfVlsWq0', label:'المقطع ١', grad:['#4F6BFF','#8A5CFF'] },
+  { id:'5vrE_pzxaC4', label:'المقطع ٢', grad:['#FF6A2B','#FF3D77'] },
+  { id:'SoCG_AOPJXQ', label:'المقطع ٣', grad:['#12C48B','#2E8FFF'] },
+  { id:'fBktnFN9QeU', label:'المقطع ٤', grad:['#9B5DE5','#5B2BFF'] },
+  { id:'axnVIBb_FyU', label:'المقطع ٥', grad:['#FFB020','#FF4B4B'] },
+];
+
+/* ---------- Role select ---------- */
+const roleSelect = document.getElementById('roleSelect');
+const controllerView = document.getElementById('controllerView');
+const receiverView = document.getElementById('receiverView');
+
+document.getElementById('roleBtnController').addEventListener('click', ()=>{
+  roleSelect.classList.remove('active');
+  controllerView.classList.add('active');
+  initController();
+});
+document.getElementById('roleBtnReceiver').addEventListener('click', ()=>{
+  roleSelect.classList.remove('active');
+  receiverView.classList.add('active');
+  initReceiver();
+});
+
+/* ================= CONTROLLER LOGIC ================= */
+function initController(){
+  const grid = document.getElementById('grid');
+  const status = document.getElementById('status');
+  const connState = document.getElementById('connStateC');
+  const modalBg = document.getElementById('modalBg');
+  const yesBtn = document.getElementById('yesBtn');
+  const noBtn = document.getElementById('noBtn');
+  let pending = null;
+
+  db.ref(".info/connected").on("value", (snap)=>{
+    if(snap.val() === true){ connState.textContent = "متصل بالخادم ✓"; connState.className = "ok"; }
+    else{ connState.textContent = "غير متصل — تحقق من إعدادات Firebase"; connState.className = "err"; }
+  });
+
+  clips.forEach((c,i)=>{
+    const el = document.createElement('div');
+    el.className = 'clip';
+    el.style.background = `linear-gradient(155deg, ${c.grad[0]}, ${c.grad[1]})`;
+    el.innerHTML = `
+      <span class="num">${i+1}/${clips.length}</span>
+      <span class="label">${c.label}</span>
+      <span class="sub">اضغط للتشغيل في VR</span>
+    `;
+    el.addEventListener('click', ()=>{
+      document.querySelectorAll('.clip').forEach(x=>x.classList.remove('selected'));
+      el.classList.add('selected');
+      pending = c;
+      modalBg.classList.add('show');
+    });
+    grid.appendChild(el);
+  });
+
+  noBtn.addEventListener('click', ()=>{
+    modalBg.classList.remove('show');
+    document.querySelectorAll('.clip').forEach(x=>x.classList.remove('selected'));
+    pending = null;
+  });
+
+  yesBtn.addEventListener('click', async ()=>{
+    if(!pending) return;
+    try{
+      await roomRef.set({ videoId: pending.id, ts: Date.now() });
+      status.textContent = `تم إرسال «${pending.label}» إلى النظارة ✓`;
+      status.classList.add('ok'); status.classList.remove('err');
+    }catch(e){
+      status.textContent = 'تعذّر الإرسال — تحقق من إعدادات Firebase';
+      status.classList.add('err'); status.classList.remove('ok');
+    }
+    modalBg.classList.remove('show');
+  });
+}
+
+/* ================= RECEIVER LOGIC ================= */
+function initReceiver(){
+  const rStart = document.getElementById('rStart');
+  const rIntro = document.getElementById('rIntro');
+  const rStereo = document.getElementById('rStereo');
+  const speedlines = document.getElementById('speedlines');
+  const introText = document.getElementById('introText');
+  const eyeL = document.getElementById('eyeL');
+  const eyeR = document.getElementById('eyeR');
+  const exitBtn = document.getElementById('exitBtn');
+  const connState = document.getElementById('connStateR');
+  let lastTs = 0;
+
+  db.ref(".info/connected").on("value", (snap)=>{
+    if(snap.val() === true){ connState.textContent = "متصل بالخادم ✓"; connState.className = "ok"; }
+    else{ connState.textContent = "غير متصل — تحقق من إعدادات Firebase"; connState.className = "err"; }
+  });
+
+  function requestFS(){
+    const el = document.documentElement;
+    const fn = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+    if(fn){ try{ fn.call(el); }catch(e){} }
+  }
+
+  function playChime(){
+    try{
+      const ctx = new (window.AudioContext||window.webkitAudioContext)();
+      const now = ctx.currentTime;
+      [523.25,659.25,783.99].forEach((freq,i)=>{
+        const o = ctx.createOscillator(); const g = ctx.createGain();
+        o.type='sine'; o.frequency.value=freq;
+        g.gain.setValueAtTime(0, now+i*0.18);
+        g.gain.linearRampToValueAtTime(0.05, now+i*0.18+0.08);
+        g.gain.exponentialRampToValueAtTime(0.0001, now+i*0.18+1.6);
+        o.connect(g); g.connect(ctx.destination);
+        o.start(now+i*0.18); o.stop(now+i*0.18+1.7);
+      });
+    }catch(e){}
+  }
+
+  function buildSpeedLines(){
+    speedlines.innerHTML='';
+    for(let i=0;i<46;i++){
+      const line = document.createElement('div');
+      line.className='line';
+      const angle = Math.random()*360;
+      const dist = 20 + Math.random()*10;
+      const len = 40 + Math.random()*220;
+      line.style.transform = `translate(-50%,-50%) rotate(${angle}deg) translateX(${dist}px)`;
+      line.style.width = '2px';
+      line.dataset.len = len;
+      speedlines.appendChild(line);
+    }
+  }
+
+  function runSpeedLines(){
+    speedlines.querySelectorAll('.line').forEach((line)=>{
+      const len = line.dataset.len;
+      const delay = Math.random()*400;
+      setTimeout(()=>{
+        line.style.transition = 'width 900ms cubic-bezier(.15,.7,.3,1), opacity 900ms ease';
+        line.style.opacity = '1';
+        line.style.width = len+'px';
+        setTimeout(()=>{ line.style.opacity='0'; }, 750);
+      }, delay);
+    });
+  }
+
+  function runIntro(){
+    rIntro.classList.add('active');
+    buildSpeedLines(); playChime();
+    requestAnimationFrame(runSpeedLines);
+    setTimeout(()=>{ introText.style.opacity = '1'; }, 1300);
+    setTimeout(()=>{
+      rIntro.style.transition = 'opacity .7s ease';
+      rIntro.style.opacity = '0';
+      setTimeout(()=>{
+        rIntro.classList.remove('active');
+        rIntro.style.opacity='1';
+        introText.style.opacity='0';
+        rStereo.classList.add('active');
+        listenForCommands();
+      }, 700);
+    }, 3400);
+  }
+
+  document.getElementById('enterBtn').addEventListener('click', ()=>{
+    requestFS();
+    rStart.style.opacity='0';
+    setTimeout(()=>{ rStart.style.display='none'; runIntro(); }, 500);
+  });
+
+  exitBtn.addEventListener('click', ()=>{
+    if(document.fullscreenElement) document.exitFullscreen();
+    location.reload();
+  });
+
+  function ytEmbedUrl(id){
+    return `https://www.youtube.com/embed/${id}?autoplay=1&playsinline=1&controls=0&rel=0&modestbranding=1`;
+  }
+  function playVideo(videoId){
+    const html = `<div class="eyeVideoWrap"><iframe src="${ytEmbedUrl(videoId)}" allow="autoplay; fullscreen" allowfullscreen></iframe></div>`;
+    eyeL.innerHTML = html; eyeR.innerHTML = html;
+  }
+  function listenForCommands(){
+    roomRef.on('value', (snapshot)=>{
+      const data = snapshot.val();
+      if(data && data.ts && data.ts !== lastTs && data.videoId){
+        lastTs = data.ts;
+        playVideo(data.videoId);
+      }
+    });
+  }
+}
+</script>
+</body>
+</html>
