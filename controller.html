@@ -41,9 +41,7 @@
     transition:transform .15s ease;
   }
   .clip:active{transform:scale(.97);}
-  .clip .num{
-    position:absolute; top:14px; right:16px; font-size:13px; color:rgba(255,255,255,.7);
-  }
+  .clip .num{ position:absolute; top:14px; right:16px; font-size:13px; color:rgba(255,255,255,.7); }
   .clip .label{font-size:16px; font-weight:700; position:relative; z-index:2;}
   .clip .sub{font-size:11px; color:rgba(255,255,255,.65); position:relative; z-index:2;}
   .clip.selected{outline:2px solid #fff;}
@@ -51,8 +49,11 @@
   footer{display:flex; align-items:center; justify-content:space-between;}
   #status{font-size:13px; color:var(--muted);}
   #status.ok{color:#7CE29A;}
+  #status.err{color:#FF6A6A;}
+  #connState{font-size:11px; color:var(--muted);}
+  #connState.ok{color:#4FE29A;}
+  #connState.err{color:#FF6A6A;}
 
-  /* ---------- MODAL ---------- */
   #modalBg{
     position:fixed; inset:0; background:rgba(4,6,14,.72);
     display:none; align-items:center; justify-content:center; z-index:50;
@@ -85,7 +86,7 @@
 
   <footer>
     <span id="status">لم يُرسل شيء بعد</span>
-    <span id="status2" style="font-size:12px;color:var(--muted);">مركز VR</span>
+    <span id="connState">جارِ الاتصال بالخادم…</span>
   </footer>
 </div>
 
@@ -100,7 +101,30 @@
   </div>
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+
 <script>
+/* =========================================================
+   عدّل نفس بيانات المشروع اللي حطيتها في receiver.html — يجب أن تتطابق تمامًا
+   ========================================================= */
+const firebaseConfig = {
+  apiKey: "ضع_API_KEY_هنا",
+  authDomain: "ضع_PROJECT_ID.firebaseapp.com",
+  databaseURL: "https://ضع_PROJECT_ID-default-rtdb.firebaseio.com",
+  projectId: "ضع_PROJECT_ID",
+  storageBucket: "ضع_PROJECT_ID.appspot.com",
+  messagingSenderId: "ضع_SENDER_ID",
+  appId: "ضع_APP_ID"
+};
+
+const ROOM = "vr_room_1"; // نفس الاسم بالضبط الموجود في receiver.html
+/* ========================================================= */
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const roomRef = db.ref(ROOM + "/command");
+
 (function(){
   const clips = [
     { id:'AWbPfVlsWq0', label:'المقطع ١', grad:['#4F6BFF','#8A5CFF'] },
@@ -112,10 +136,21 @@
 
   const grid = document.getElementById('grid');
   const status = document.getElementById('status');
+  const connState = document.getElementById('connState');
   const modalBg = document.getElementById('modalBg');
   const yesBtn = document.getElementById('yesBtn');
   const noBtn = document.getElementById('noBtn');
   let pending = null;
+
+  db.ref(".info/connected").on("value", (snap)=>{
+    if(snap.val() === true){
+      connState.textContent = "متصل بالخادم ✓";
+      connState.className = "ok";
+    }else{
+      connState.textContent = "غير متصل — تحقق من إعدادات Firebase";
+      connState.className = "err";
+    }
+  });
 
   clips.forEach((c,i)=>{
     const el = document.createElement('div');
@@ -143,13 +178,14 @@
 
   yesBtn.addEventListener('click', async ()=>{
     if(!pending) return;
-    const payload = JSON.stringify({ videoId: pending.id, ts: Date.now() });
     try{
-      await window.storage.set('vr:queue', payload, true);
+      await roomRef.set({ videoId: pending.id, ts: Date.now() });
       status.textContent = `تم إرسال «${pending.label}» إلى النظارة ✓`;
       status.classList.add('ok');
+      status.classList.remove('err');
     }catch(e){
-      status.textContent = 'تعذّر الإرسال، حاول مرة أخرى';
+      status.textContent = 'تعذّر الإرسال — تحقق من إعدادات Firebase';
+      status.classList.add('err');
       status.classList.remove('ok');
     }
     modalBg.classList.remove('show');
