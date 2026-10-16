@@ -1,541 +1,166 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<title>مركز VR</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+<html lang="ar" dir="rtl"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>غرفة الألغاز</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --bg:#070B14;
-    --panel:#101a33;
-    --blue:#4F6BFF;
-    --violet:#9B5DE5;
-    --orange:#FF6A2B;
-    --line:#1E2A4D;
-    --muted:#7480A6;
-    --white:#F5F7FF;
-  }
-  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
-  html,body{
-    margin:0; padding:0; height:100%; width:100%;
-    background:var(--bg); color:var(--white);
-    font-family:'Cairo',sans-serif; overflow:hidden; overscroll-behavior:none;
-  }
-  #app{position:fixed; inset:0;}
-  .screen{position:absolute; inset:0; display:none;}
-  .screen.active{display:flex;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#050a0d;color:#fff;font-family:Cairo,sans-serif;overflow:hidden}
+.s{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px;background:radial-gradient(circle at 50% 15%,#0f5a3f,#06140f 70%);text-align:center}
+.s.on{display:flex}
+button,input,select{font:inherit}
+.b{background:linear-gradient(135deg,#1fbf75,#0b8f5a);color:#fff;border:0;border-radius:14px;padding:13px 22px;font-weight:700;font-size:16px;min-width:200px}
+.b.o{background:#0e2a21;border:1px solid #2a7a58;min-width:90px}
+.b:disabled{opacity:.4}
+.i{background:#0c211a;border:1px solid #2a7a58;color:#fff;border-radius:12px;padding:12px;font-size:18px;text-align:center;width:min(260px,80vw)}
+.sm{background:#0e2a21;color:#fff;border:1px solid #2a7a58;border-radius:10px;padding:7px 12px;font-size:13px}
+h1{margin:0;font-size:26px}
+.pr{background:#0e2a21;border:1px solid #2a7a58;border-radius:12px;padding:10px 24px;margin:4px;min-width:200px}
+.bd{flex:1;width:100%;font-size:min(20px,4.2vh);border:2px solid #2d6a53;border-radius:16px;background:linear-gradient(160deg,#0e4a38,#082c21);display:flex;align-items:center;justify-content:center;overflow:hidden;padding:10px}
+.bd>div{text-align:center;max-width:100%;line-height:1.5}
+.t .bd{font-size:min(14px,2.6vh)}
+.qt{position:absolute;top:0;left:50%;transform:translateX(-50%);background:#c01818;color:#fff;font-size:12px;padding:3px 12px;border-radius:0 0 10px 10px;max-width:96%;text-align:center;font-weight:700}
+.nt{position:absolute;bottom:-12px;right:12px;background:#f90;color:#000;font-weight:900;border-radius:999px;padding:3px 14px;font-size:13px}
+#tm{font-size:22px;font-weight:900;background:rgba(0,0,0,.45);border:2px solid #3aa0ff;border-radius:999px;padding:3px 14px;font-family:monospace}
+#blk{position:fixed;inset:0;background:#000;z-index:99;display:none}
+</style></head><body>
 
-  #roleSelect{
-    flex-direction:column; align-items:center; justify-content:center; gap:18px;
-    background:
-      radial-gradient(circle at 50% 30%, rgba(79,107,255,0.22), transparent 60%),
-      radial-gradient(circle at 50% 80%, rgba(155,93,229,0.16), transparent 55%),
-      var(--bg);
-    text-align:center; padding:0 32px;
-  }
-  #roleSelect .badge{ font-size:12px; color:#6C7AA5; border:1px solid #26305A; border-radius:999px; padding:5px 14px; }
-  #roleSelect h1{ font-size:clamp(20px,5.5vw,28px); font-weight:900; margin:6px 0 4px; }
-  #roleSelect p{ font-size:13px; color:#A9B4D6; margin:0 0 10px; max-width:320px; line-height:1.8; }
-  .roleBtn{
-    font-family:'Cairo',sans-serif; width:min(300px,80vw); font-weight:700; font-size:16px; color:var(--white);
-    background:var(--panel); border:1px solid var(--line); border-radius:16px;
-    padding:18px 20px; cursor:pointer; text-align:right;
-  }
-  .roleBtn .t{display:block; font-size:16px; font-weight:800;}
-  .roleBtn .s{display:block; font-size:12px; color:var(--muted); margin-top:4px; font-weight:400;}
-  #roleBtnController{border-color:var(--blue);}
-  #roleBtnReceiver{border-color:var(--violet);}
-
-  #controllerView{flex-direction:column; padding:24px 28px; gap:16px;}
-  #controllerView header{display:flex; flex-direction:column; gap:4px;}
-  #controllerView header .kicker{font-size:12px; color:var(--muted);}
-  #controllerView header h1{margin:0; font-size:20px; font-weight:900;}
-
-  #roomCard{
-    background:var(--panel); border:1px solid var(--line); border-radius:16px;
-    padding:14px 18px; display:flex; align-items:center; justify-content:space-between; gap:12px;
-  }
-  #roomCard .l{font-size:12px; color:var(--muted);}
-  #roomCode{font-size:20px; font-weight:900; letter-spacing:2px; font-family:monospace;}
-  #copyBtn{
-    font-family:'Cairo',sans-serif; font-size:12px; font-weight:700; color:var(--bg);
-    background:linear-gradient(135deg,var(--blue),var(--violet)); border:none; border-radius:10px;
-    padding:9px 14px; cursor:pointer; white-space:nowrap;
-  }
-  #connStateC{font-size:11px; color:var(--muted);}
-  #connStateC.ok{color:#4FE29A;} #connStateC.err{color:#FF6A6A;}
-
-  #grid{ flex:1; display:grid; grid-template-columns:repeat(3,1fr); grid-auto-rows:1fr; gap:16px; }
-  @media (max-width:700px){ #grid{grid-template-columns:repeat(2,1fr);} }
-  .clip{
-    position:relative; border-radius:20px; border:1px solid var(--line);
-    overflow:hidden; cursor:pointer; display:flex; flex-direction:column;
-    justify-content:flex-end; padding:16px; min-height:110px;
-    transition:transform .15s ease;
-  }
-  .clip:active{transform:scale(.97);}
-  .clip .num{ position:absolute; top:14px; right:16px; font-size:13px; color:rgba(255,255,255,.7); }
-  .clip .label{font-size:16px; font-weight:700; position:relative; z-index:2;}
-  .clip .sub{font-size:11px; color:rgba(255,255,255,.65); position:relative; z-index:2;}
-  .clip.selected{outline:2px solid #fff;}
-  #controllerView footer{display:flex; align-items:center; justify-content:space-between;}
-  #status{font-size:13px; color:var(--muted);}
-  #status.ok{color:#7CE29A;} #status.err{color:#FF6A6A;}
-
-  #modalBg{
-    position:fixed; inset:0; background:rgba(4,6,14,.72);
-    display:none; align-items:center; justify-content:center; z-index:50;
-    backdrop-filter:blur(4px);
-  }
-  #modalBg.show{display:flex;}
-  #modal{
-    background:var(--panel); border:1px solid var(--line); border-radius:22px;
-    padding:32px 28px; width:min(360px,86vw); text-align:center;
-  }
-  #modal h2{margin:0 0 10px; font-size:19px; font-weight:900;}
-  #modal p{margin:0 0 24px; font-size:13px; color:var(--muted); line-height:1.7;}
-  .modalBtns{display:flex; gap:12px;}
-  .modalBtns button{
-    flex:1; font-family:'Cairo',sans-serif; font-weight:700; font-size:15px;
-    padding:13px 0; border-radius:12px; border:none; cursor:pointer;
-  }
-  #yesBtn{background:linear-gradient(135deg,var(--blue),var(--violet)); color:#fff;}
-  #noBtn{background:transparent; border:1px solid var(--line); color:#C7CEE8;}
-
-  #rJoin{
-    position:absolute; inset:0; flex-direction:column; align-items:center; justify-content:center; gap:16px;
-    background:
-      radial-gradient(circle at 50% 30%, rgba(79,107,255,0.22), transparent 60%),
-      radial-gradient(circle at 50% 80%, rgba(155,93,229,0.16), transparent 55%),
-      var(--bg);
-    text-align:center; padding:0 32px;
-  }
-  #rJoin h1{font-size:20px; font-weight:900; margin:0;}
-  #rJoin p{font-size:13px; color:#A9B4D6; margin:0; max-width:300px; line-height:1.8;}
-  #roomInput{
-    font-family:monospace; font-size:20px; letter-spacing:2px; width:min(240px,70vw); text-align:center;
-    background:var(--panel); border:1px solid var(--line); border-radius:12px;
-    padding:14px; color:var(--white); text-transform:uppercase;
-  }
-  #joinBtn{
-    font-family:'Cairo',sans-serif; font-weight:700; font-size:15px; color:var(--bg);
-    background:linear-gradient(135deg,var(--blue),var(--violet));
-    border:none; border-radius:999px; padding:14px 36px; cursor:pointer;
-  }
-  #joinError{font-size:12px; color:#FF6A6A; min-height:16px;}
-
-  #receiverView{position:absolute; inset:0;}
-  #rStart{
-    position:absolute; inset:0; flex-direction:column; align-items:center; justify-content:center; gap:26px;
-    background:
-      radial-gradient(circle at 50% 30%, rgba(79,107,255,0.25), transparent 60%),
-      radial-gradient(circle at 50% 80%, rgba(155,93,229,0.18), transparent 55%),
-      var(--bg);
-    text-align:center; padding:0 32px; transition:opacity .6s ease;
-  }
-  #rStart h1{ font-size:clamp(20px,5.5vw,30px); font-weight:900; margin:0; }
-  #rStart p{ font-size:14px; color:#A9B4D6; margin:0; max-width:300px; line-height:1.8; }
-  #enterBtn{
-    font-family:'Cairo',sans-serif; font-weight:700; font-size:16px; color:var(--bg);
-    background:linear-gradient(135deg,var(--blue),var(--violet));
-    border:none; border-radius:999px; padding:15px 40px;
-    box-shadow:0 10px 30px rgba(79,107,255,.35); cursor:pointer;
-  }
-
-  #rIntro{
-    position:absolute; inset:0; background:#000;
-    display:none; align-items:center; justify-content:center; overflow:hidden;
-  }
-  #rIntro.active{display:flex;}
-  #speedlines{position:absolute; inset:0;}
-  .line{
-    position:absolute; top:50%; left:50%; height:2px; width:2px; border-radius:2px;
-    background:linear-gradient(90deg, rgba(255,138,61,0) 0%, #FFB088 40%, #FFFFFF 100%);
-    transform-origin:left center; opacity:0;
-  }
-  #introText{ position:relative; z-index:2; text-align:center; opacity:0; transition:opacity .8s ease; }
-  #introText .l1{
-    display:block; font-size:clamp(20px,6vw,30px); font-weight:900;
-    color:var(--blue); text-shadow:0 0 20px rgba(79,107,255,.6);
-  }
-  #introText .l2{
-    display:block; margin-top:10px; font-size:clamp(16px,4.5vw,22px); font-weight:700;
-    background:linear-gradient(90deg,var(--violet),#C9A8FF);
-    -webkit-background-clip:text; background-clip:text; color:transparent;
-  }
-
-  #rStereo{ position:absolute; inset:0; display:none; background:#000; }
-  #rStereo.active{display:block;}
-  .eye{
-    position:absolute; top:0; bottom:0; width:50%;
-    display:flex; align-items:center; justify-content:center; overflow:hidden; background:#000;
-  }
-  #eyeL{left:0;} #eyeR{right:0;}
-  #divider{ position:absolute; top:0; bottom:0; left:50%; width:1px; background:rgba(255,255,255,.15); z-index:5; }
-  .waitMsg{ color:#5A6494; font-size:13px; text-align:center; padding:0 20px; line-height:1.8; }
-  .pulseDot{ width:8px; height:8px; border-radius:50%; margin:0 auto 14px; background:var(--blue); animation:pulse 1.6s ease-in-out infinite; }
-  @keyframes pulse{0%,100%{opacity:.25; transform:scale(1);} 50%{opacity:1; transform:scale(1.4);}}
-  .eyeVideoWrap{width:100%; height:100%; position:relative;}
-  .eyeVideoWrap iframe{ position:absolute; top:50%; left:50%; width:180%; height:100%; transform:translate(-50%,-50%); border:none; }
-  #exitBtn{
-    position:absolute; top:14px; left:14px; z-index:10;
-    width:34px; height:34px; border-radius:50%; border:none;
-    background:rgba(255,255,255,.08); color:#fff; font-size:16px;
-    display:flex; align-items:center; justify-content:center; opacity:.5;
-  }
-</style>
-</head>
-<body>
-<div id="app">
-
-  <div id="roleSelect" class="screen active">
-    <div class="badge">مركز VR</div>
-    <h1>هذا الجهاز يشتغل كـ...</h1>
-    <p>اختر دور هذا الجهاز. ما فيه أي حساب ولا إعداد — بس افتح على الجهازين واربطهم بكود واحد.</p>
-    <button class="roleBtn" id="roleBtnController">
-      <span class="t">لوحة التحكم (آيباد)</span>
-      <span class="s">تختار المقطع وترسله للنظارة</span>
-    </button>
-    <button class="roleBtn" id="roleBtnReceiver">
-      <span class="t">شاشة العرض (جوال داخل النظارة)</span>
-      <span class="s">تعرض المقدمة والفيديو بوضع VR</span>
-    </button>
-  </div>
-
-  <div id="controllerView" class="screen">
-    <header>
-      <span class="kicker">لوحة التحكم</span>
-      <h1>اختر المقطع لعرضه في النظارة</h1>
-    </header>
-    <div id="roomCard">
-      <div>
-        <div class="l">كود الغرفة — أدخله في جهاز النظارة</div>
-        <div id="roomCode">——</div>
-      </div>
-      <button id="copyBtn">نسخ الكود</button>
-    </div>
-    <div id="grid"></div>
-    <footer>
-      <span id="status">لم يُرسل شيء بعد</span>
-      <span id="connStateC">جارِ الاتصال…</span>
-    </footer>
-  </div>
-
-  <div id="modalBg">
-    <div id="modal">
-      <h2>هل المستخدم يستخدم نظارة VR؟</h2>
-      <p>سيتم تشغيل المقدمة ثم المقطع مباشرة على شاشة الجوال داخل النظارة.</p>
-      <div class="modalBtns">
-        <button id="noBtn">لا</button>
-        <button id="yesBtn">نعم، تشغيل</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="receiverView" class="screen">
-
-    <div id="rJoin" class="screen active" style="display:flex;">
-      <div class="badge">مركز VR</div>
-      <h1>أدخل كود الغرفة</h1>
-      <p>الكود ظاهر فوق شاشة الآيباد (لوحة التحكم) — اكتبه هنا مرة وحدة بس.</p>
-      <input id="roomInput" type="text" inputmode="text" maxlength="6" placeholder="ABC123">
-      <button id="joinBtn">دخول</button>
-      <div id="joinError"></div>
-    </div>
-
-    <div id="rStart" class="screen">
-      <div class="badge">مركز VR</div>
-      <h1>ضع الجوال داخل النظارة<br>بعد بدء التجربة</h1>
-      <p>ستدخل الشاشة في وضع ملء الشاشة وتنقسم إلى عينين، بانتظار المقطع الذي يختاره المشغّل من الآيباد.</p>
-      <button id="enterBtn">بدء تجربة VR</button>
-    </div>
-
-    <div id="rIntro">
-      <div id="speedlines"></div>
-      <div id="introText">
-        <span class="l1">شكراً لتجربتك</span>
-        <span class="l2">هنا نبدأ في مركز VR</span>
-      </div>
-    </div>
-
-    <div id="rStereo">
-      <button id="exitBtn">✕</button>
-      <div class="eye" id="eyeL"><div class="waitMsg" id="msgL"><div class="pulseDot"></div>بانتظار المقطع…</div></div>
-      <div class="eye" id="eyeR"><div class="waitMsg" id="msgR"><div class="pulseDot"></div>بانتظار المقطع…</div></div>
-      <div id="divider"></div>
-    </div>
-  </div>
-
+<div id="h" class="s on">
+<h1>🧩 غرفة الألغاز</h1>
+<input id="nm" class="i" placeholder="اكتب اسمك" maxlength="12">
+<button class="b" id="cr">إنشاء روم</button>
+<div style="display:flex;gap:8px"><input id="rc" class="i" style="width:140px;letter-spacing:2px;text-transform:uppercase" placeholder="رقم الروم" maxlength="6"><button class="b o" id="jn">دخول</button></div>
+<button class="b o" id="tu1" style="min-width:200px">تتوريال</button>
+<div id="er" style="color:#ff7777;min-height:22px"></div>
 </div>
 
+<div id="l" class="s">
+<div>رقم الروم</div><h1 id="lc" style="letter-spacing:5px;font-family:monospace;font-size:38px"></h1>
+<div id="pl"></div><button class="b" id="st">ابدأ اللعبة</button><div id="lm" style="color:#9fd"></div>
+</div>
+
+<div id="g" class="s" style="justify-content:flex-start;gap:0;padding:0">
+<div style="position:absolute;top:8px;left:8px;right:8px;display:flex;justify-content:space-between;align-items:center;z-index:5;direction:ltr">
+<div style="display:flex;gap:6px;align-items:center"><select id="lv" class="sm"></select><button id="sk" class="sm">تخطي</button><span id="vt" style="font-size:12px"></span></div>
+<div id="tm">00:00</div></div>
+<div id="bw" style="margin-top:56px;width:min(94vw,700px);height:min(52vh,420px);position:relative;display:flex"></div>
+<div id="an" style="margin-top:26px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;padding:0 10px"></div>
+</div>
+
+<div id="tu" class="s t" style="justify-content:flex-start;gap:8px;padding-top:50px">
+<button id="tx" class="sm" style="position:absolute;top:10px;left:10px;font-size:18px">✕</button>
+<div style="display:flex;gap:10px;align-items:center"><button class="sm" id="tp">السابق</button><b id="tn"></b><button class="sm" id="tq">التالي</button></div>
+<div id="ti" style="width:min(94vw,520px);display:flex;flex-direction:column;gap:16px;flex:1;min-height:0"></div>
+<div id="ta" style="color:#7dffb5;font-weight:700;padding-bottom:8px"></div>
+</div>
+
+<div id="en" class="s"><h1>🎉 خلصتوا كل المراحل!</h1><div style="font-size:18px">وقتكم الكلي</div><div id="et" style="font-size:46px;font-weight:900;font-family:monospace"></div><button class="b" onclick="location.reload()">لعب من جديد</button></div>
+<div id="blk"></div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
-<script src="https://www.youtube.com/iframe_api"></script>
-
 <script>
-/* =========================================================
-   لا يوجد أي إعداد أو حساب مطلوب. الربط يتم عبر بروكر MQTT عام
-   (broker.hivemq.com) عبر WebSocket. كل جهاز يشترك بنفس "الموضوع"
-   المبني على كود الغرفة، فيوصل الأمر لحظيًا بدون أي تسجيل.
-   ========================================================= */
-const MQTT_HOST = "broker.hivemq.com";
-const MQTT_PORT = 8884;
-const TOPIC_PREFIX = "vr-center-app/";
-const LS_KEY = "vr_room_code";
+const $=id=>document.getElementById(id),esc=s=>String(s).replace(/[&<>"]/g,c=>'&#'+c.charCodeAt(0)+';');
+const show=id=>document.querySelectorAll('.s').forEach(e=>e.classList.toggle('on',e.id==id));
+const uid=Math.random().toString(36).slice(2,9);
+let name='';try{name=localStorage.getItem('pzn')||''}catch(e){}
+let room,host=false,cl,T,G,pls=[],seat=-1,t0=0,run=0,joined=0,cur=null,tl=0;
 
-function genRoomCode(){
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let out = "";
-  for(let i=0;i<6;i++){ out += chars[Math.floor(Math.random()*chars.length)]; }
-  return out;
+/* ============ المراحل (25 مرحلة عشوائية) ============ */
+const LV=[];for(let k=0;k<4;k++)[[1,4],[2,4],[3,4],[4,2],[5,3],[6,2],[7,3],[8,3]].forEach(([f,c])=>k<c&&LV.push([f,k]));
+function rng(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function gen(i,seed){
+const r=rng(seed),ri=(a,b)=>a+Math.floor(r()*(b-a+1)),sh=a=>a.map(x=>[r(),x]).sort((x,y)=>x[0]-y[0]).map(x=>x[1]),[f,p]=LV[i];
+const U=g=>{let n;do n=[0,1,2].map(g);while(new Set(n).size<3);return n};
+let b,q,ty='n',a,qs=ri(0,2),pm=sh([0,1,2]);
+if(f==1){const K='▲●■★'[p],O='▲●■★'.replace(K,''),c=[0,1,2].map(()=>ri(1,6));
+b=c.map(n=>{let s=Array(n).fill(K);for(let j=ri(2,5);j--;)s.push(O[ri(0,2)]);return sh(s).map(x=>`<span style="font-size:${ri(15,26)/10}em;display:inline-block;transform:rotate(${ri(0,359)}deg);margin:.15em">${x}</span>`).join('')});
+a=c[0]+c[1]+c[2];q=`كم عدد ${K} في جميع الصور؟`}
+else if(f==2){const n=U(()=>p==3?ri(2,9):ri(5,40)),s=[...n].sort((x,y)=>x-y);
+b=n.map(x=>`<b style="font-size:4.5em">${x}</b>`);
+a=[n[0]+n[1]+n[2],s[2]-s[0],s[1]+s[2],s[0]*s[2]][p];
+q=['كم مجموع الأرقام الثلاثة؟','كم الفرق بين أكبر وأصغر رقم؟','كم مجموع أكبر رقمين؟','كم ناتج أصغر رقم × أكبر رقم؟'][p]}
+else if(f==3){const E=[['🍅','🍎'],['🐱','🐶'],['⭐','🌙'],['🚗','🚕']][p],g=Array.from({length:9},()=>E[ri(0,1)]),o=ri(0,2),c=ri(0,8);
+b=[0,1,2].map(j=>`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.1em;font-size:2.2em">${g.map((x,k)=>`<span>${j==o&&k==c?E[1-E.indexOf(x)]:x}</span>`).join('')}</div>`);
+ty='p';a=o;q='من صورته مختلفة عن الباقين؟'}
+else if(f==4){const W='شمس قمر جمل باب قلم حليم كريم نخلة شجاع مدرسة سيارة حاسوب عصفور فنجان برتقال مستشفى سلحفاة'.split(' ');let w=[];
+sh(W).forEach(x=>{if(w.length<3&&!w.some(y=>y.length==x.length))w.push(x)});
+b=w.map(x=>`<b style="font-size:3.4em">${x}</b>`);ty='p';const L=w.map(x=>x.length);a=L.indexOf(p?Math.min(...L):Math.max(...L));q=p?'من عنده الكلمة الأقصر؟':'من عنده الكلمة الأطول؟'}
+else if(f==5){let P,D,V;do{P=[0,1,2].map(()=>ri(3,20)*10);D=P.map(()=>[10,20,25,30,40,50][ri(0,5)]);V=P.map((x,j)=>p==2?x*D[j]/100:x*(100-D[j])/100)}while(new Set(V).size<3);
+b=P.map((x,j)=>`<div style="font-size:1.2em;line-height:1.9">🛍️<br>السعر <b>${x}</b> ريال<br>خصم <b>${D[j]}%</b></div>`);
+ty='p';a=V.indexOf(p==1?Math.min(...V):Math.max(...V));q=['من صاحب أغلى سعر بعد الخصم؟','من صاحب أرخص سعر بعد الخصم؟','من وفّر أكبر مبلغ بالخصم؟'][p]}
+else if(f==6){const C=[['أحمر','#ff3b3b'],['أزرق','#4a8dff'],['أخضر','#3de05a'],['أصفر','#ffd93b'],['أبيض','#fff']],W=[0,1,2].map(()=>{const w=ri(0,4);return[w,r()<.5?w:ri(0,4)]});
+b=W.map(([w,k])=>`<b style="font-size:3.4em;color:${C[k][1]}">${C[w][0]}</b>`);
+a=p?W.filter(x=>x[1]==0).length:W.filter(x=>x[0]==x[1]).length;
+q=p?'كم لاعب لون الخط عنده أحمر؟':'كم لاعب كُتب عنده اللون بنفس لونه؟'}
+else if(f==7){const E=[['🍎','🍌'],['⚽','🏀'],['🚗','🚲']][ri(0,2)],x=ri(2,9),y=ri(2,9),
+lb=[`${E[0]}${E[0]} = ${2*x}`,`${E[0]}${E[1]} = ${x+y}`,[`${E[1]}${E[1]}${E[0]}`,`${E[1]}${E[1]}${E[1]}`,`${E[0]}${E[1]}${E[1]}${E[1]}`][p]+' = ؟'];
+b=pm.map(j=>`<b dir="ltr" style="font-size:2.6em">${lb[j]}</b>`);qs=pm.indexOf(2);a=[2*y+x,3*y,x+3*y][p];q='كم قيمة الناتج؟'}
+else{const d=[0,1,2].map(()=>ri(1,9)),lb=d.map((x,j)=>`الخانة <b>${j+1}</b><br><b style="font-size:3.5em">${x}</b>`);
+b=pm.map(j=>lb[j]);a=[+d.join(''),+[...d].reverse().join(''),d[0]+d[1]+d[2]][p];
+q=['اكتب الرقم السري (الخانات بالترتيب)','اكتب الرقم السري بالعكس','كم مجموع أرقام الخانات؟'][p]}
+return{b,q,qs,ty,a}}
+const bdH=x=>`<div class="bd"><div>${x}</div></div>`;
+const nz=s=>String(s).trim()===''?NaN:+String(s).replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/\s/g,'');
+
+/* ============ الاتصال (MQTT عام بدون سيرفر) ============ */
+const err=s=>{show('h');$('er').textContent=s};
+function send(o){o.f=o.f||uid;const m=new Paho.MQTT.Message(JSON.stringify(o));m.destinationName=T;cl.send(m)}
+function conn(cb){T='pzl3x/'+room;cl=new Paho.MQTT.Client('broker.hivemq.com',8884,'pz'+uid+Date.now());
+cl.onMessageArrived=m=>{try{on(JSON.parse(m.payloadString))}catch(e){}};
+cl.onConnectionLost=()=>{if(run)alert('انقطع الاتصال، حدّث الصفحة')};
+cl.connect({useSSL:true,timeout:8,onSuccess:()=>{cl.subscribe(T);cb()},onFailure:()=>err('تعذّر الاتصال بالإنترنت')})}
+
+/* ============ منطق المالك (الحكم) ============ */
+function sendL(){G.c=gen(G.o[G.i],Math.random()*1e9|0);G.v.clear();const c=G.c;send({t:'lvl',n:G.i+1,b:c.b,q:c.q,qs:c.qs,ty:c.ty,el:Date.now()-G.t0})}
+function hNext(){G.i++;if(G.i>=25){G.on=false;send({t:'end',ms:Date.now()-G.t0})}else sendL()}
+function hStart(){if(pls.length<3)return;G.on=true;G.o=[...Array(25).keys()].map(x=>[Math.random(),x]).sort((x,y)=>x[0]-y[0]).map(x=>x[1]);G.i=0;G.t0=Date.now();sendL()}
+function on(m){
+if(host){
+ if(m.t=='join'){const i=pls.findIndex(p=>p.id==m.f);
+  if(i<0){if(pls.length>=3||G.on){send({t:'full',to:m.f});return}pls.push({id:m.f,n:m.n})}else pls[i].n=m.n;
+  send({t:'lobby',pl:pls});if(G.on&&i>=0)send({t:'lvl',n:G.i+1,b:G.c.b,q:G.c.q,qs:G.c.qs,ty:G.c.ty,el:Date.now()-G.t0})}
+ else if(G.on&&m.t=='ans'&&Date.now()>=G.lk&&pls.some(p=>p.id==m.f)){const c=G.c;
+  if(c.ty=='p'?+m.v==c.a:nz(m.v)==c.a)hNext();else{G.lk=Date.now()+15000;send({t:'bad'})}}
+ else if(G.on&&m.t=='skip'&&pls.some(p=>p.id==m.f)){G.v.add(m.f);if(G.v.size>=2)hNext();else send({t:'votes',n:G.v.size})}
+ else if(G.on&&m.t=='pick'&&m.f==uid&&m.n>=1&&m.n<=25){G.i=m.n-1;sendL()}
 }
-function makeClientId(){
-  return "vr_" + Math.random().toString(16).slice(2) + Date.now().toString(16);
-}
+if(m.t=='full'&&m.to==uid){joined=0;err('الروم ممتلئ (3 لاعبين فقط) أو اللعبة بدأت');return}
+if(m.t=='lobby'){pls=m.pl;seat=pls.findIndex(p=>p.id==uid);if(seat<0)return;joined=1;if(!run){lob();show('l')}return}
+if(seat<0)return;
+if(m.t=='lvl'){cur=m;t0=Date.now()-m.el;run=1;if(!$('g').classList.contains('on'))show('g');draw()}
+else if(m.t=='votes')$('vt').textContent='تخطي '+m.n+'/2';
+else if(m.t=='bad'){const k=$('blk');k.style.display='block';setTimeout(()=>k.style.display='none',15000)}
+else if(m.t=='end'){run=0;const s=m.ms/1000|0;$('et').textContent=pad(s/60|0)+':'+pad(s%60);show('en')}}
 
-const clips = [
-  { id:'AWbPfVlsWq0', label:'المقطع ١', grad:['#4F6BFF','#8A5CFF'] },
-  { id:'5vrE_pzxaC4', label:'المقطع ٢', grad:['#FF6A2B','#FF3D77'] },
-  { id:'SoCG_AOPJXQ', label:'المقطع ٣', grad:['#12C48B','#2E8FFF'] },
-  { id:'fBktnFN9QeU', label:'المقطع ٤', grad:['#9B5DE5','#5B2BFF'] },
-  { id:'axnVIBb_FyU', label:'المقطع ٥', grad:['#FFB020','#FF4B4B'] },
-];
+/* ============ الواجهة ============ */
+const pad=n=>String(n).padStart(2,'0');
+function lob(){$('lc').textContent=room;$('pl').innerHTML=[0,1,2].map(j=>`<div class="pr">${pls[j]?(j?'':'👑 ')+esc(pls[j].n):'— بانتظار لاعب —'}</div>`).join('');
+$('st').style.display=host?'':'none';$('st').disabled=pls.length<3;$('lm').textContent=host?`اللاعبين ${pls.length}/3 — أرسل الرقم لأصحابك`:'بانتظار المالك يبدأ اللعبة…'}
+function draw(){const c=cur;
+$('bw').innerHTML=bdH(c.b[seat])+(c.qs==seat?`<div class="qt">${esc(c.q)}</div>`:'')+`<div class="nt">${esc(pls[seat].n)}</div>`;
+$('an').innerHTML=c.ty=='p'?pls.map((p,j)=>`<button class="b o" data-j="${j}">${esc(p.n)}</button>`).join(''):`<input id="av" class="i" style="width:160px" inputmode="numeric" placeholder="الجواب"><button class="b o" id="ab">إرسال</button>`;
+$('lv').value=c.n;$('vt').textContent=''}
+for(let i=1;i<=25;i++)$('lv').add(new Option('مرحلة '+i,i));
+$('lv').onchange=()=>{if(host)send({t:'pick',n:+$('lv').value});else $('lv').value=cur?cur.n:1};
+$('sk').onclick=()=>send({t:'skip'});
+const ans=v=>{if($('blk').style.display=='block')return;send({t:'ans',v})};
+$('an').onclick=e=>{const j=e.target.dataset&&e.target.dataset.j;if(j!=null)ans(+j);else if(e.target.id=='ab'){ans($('av').value);$('av').value=''}};
+$('an').onkeydown=e=>{if(e.key=='Enter'&&e.target.id=='av'){ans(e.target.value);e.target.value=''}};
+setInterval(()=>{if(run){const s=(Date.now()-t0)/1000|0;$('tm').textContent=pad(s/60|0)+':'+pad(s%60)}},300);
 
-const roleSelect = document.getElementById('roleSelect');
-const controllerView = document.getElementById('controllerView');
-const receiverView = document.getElementById('receiverView');
+$('nm').value=name;
+const sv=()=>{name=$('nm').value.trim().slice(0,12);if(!name){$('er').textContent='اكتب اسمك أول';return 0}try{localStorage.setItem('pzn',name)}catch(e){}return 1};
+$('cr').onclick=()=>{if(!sv())return;room=Array.from({length:6},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.random()*32|0]).join('');
+host=true;pls=[{id:uid,n:name}];seat=0;G={on:false,o:[],i:0,c:null,v:new Set(),lk:0,t0:0};$('er').textContent='جارِ الاتصال…';
+conn(()=>{joined=1;lob();show('l')})};
+$('jn').onclick=()=>{if(!sv())return;const c=$('rc').value.trim().toUpperCase();if(!c){$('er').textContent='اكتب رقم الروم';return}
+room=c;host=false;$('er').textContent='جارِ الدخول…';
+conn(()=>{const j=()=>!joined&&send({t:'join',n:name});j();setTimeout(j,2500);setTimeout(()=>{if(!joined){err('الروم غير موجود أو المالك غير متصل');cl.disconnect()}},7000)})};
+$('st').onclick=hStart;
 
-document.getElementById('roleBtnController').addEventListener('click', ()=>{
-  roleSelect.classList.remove('active');
-  controllerView.classList.add('active');
-  initController();
-});
-document.getElementById('roleBtnReceiver').addEventListener('click', ()=>{
-  roleSelect.classList.remove('active');
-  receiverView.classList.add('active');
-  initReceiverJoin();
-});
-
-/* ================= CONTROLLER ================= */
-function initController(){
-  const roomCodeEl = document.getElementById('roomCode');
-  const copyBtn = document.getElementById('copyBtn');
-  const grid = document.getElementById('grid');
-  const status = document.getElementById('status');
-  const connState = document.getElementById('connStateC');
-  const modalBg = document.getElementById('modalBg');
-  const yesBtn = document.getElementById('yesBtn');
-  const noBtn = document.getElementById('noBtn');
-  let pending = null;
-
-  const roomCode = genRoomCode();
-  roomCodeEl.textContent = roomCode;
-  const topic = TOPIC_PREFIX + roomCode;
-
-  const client = new Paho.MQTT.Client(MQTT_HOST, MQTT_PORT, makeClientId());
-  client.onConnectionLost = ()=>{
-    connState.textContent = "انقطع الاتصال — يعيد المحاولة…";
-    connState.className = "err";
-  };
-  client.connect({
-    useSSL: true,
-    timeout: 8,
-    onSuccess: ()=>{
-      connState.textContent = "متصل بالخادم ✓";
-      connState.className = "ok";
-    },
-    onFailure: ()=>{
-      connState.textContent = "تعذّر الاتصال — تحقق من الإنترنت وحدّث الصفحة";
-      connState.className = "err";
-    }
-  });
-
-  copyBtn.addEventListener('click', ()=>{
-    navigator.clipboard.writeText(roomCode).then(()=>{
-      copyBtn.textContent = "تم النسخ ✓";
-      setTimeout(()=>{ copyBtn.textContent = "نسخ الكود"; }, 1500);
-    });
-  });
-
-  clips.forEach((c,i)=>{
-    const el = document.createElement('div');
-    el.className = 'clip';
-    el.style.background = `linear-gradient(155deg, ${c.grad[0]}, ${c.grad[1]})`;
-    el.innerHTML = `
-      <span class="num">${i+1}/${clips.length}</span>
-      <span class="label">${c.label}</span>
-      <span class="sub">اضغط للتشغيل في VR</span>
-    `;
-    el.addEventListener('click', ()=>{
-      document.querySelectorAll('.clip').forEach(x=>x.classList.remove('selected'));
-      el.classList.add('selected');
-      pending = c;
-      modalBg.classList.add('show');
-    });
-    grid.appendChild(el);
-  });
-
-  noBtn.addEventListener('click', ()=>{
-    modalBg.classList.remove('show');
-    document.querySelectorAll('.clip').forEach(x=>x.classList.remove('selected'));
-    pending = null;
-  });
-
-  yesBtn.addEventListener('click', ()=>{
-    if(!pending) return;
-    try{
-      const payload = JSON.stringify({ videoId: pending.id, ts: Date.now() });
-      const message = new Paho.MQTT.Message(payload);
-      message.destinationName = topic;
-      client.send(message);
-      status.textContent = `تم إرسال «${pending.label}» إلى النظارة ✓`;
-      status.classList.add('ok'); status.classList.remove('err');
-    }catch(e){
-      status.textContent = 'تعذّر الإرسال — تأكد إن الاتصال متصل فوق';
-      status.classList.add('err'); status.classList.remove('ok');
-    }
-    modalBg.classList.remove('show');
-  });
-}
-
-/* ================= RECEIVER: JOIN ================= */
-function initReceiverJoin(){
-  const rJoin = document.getElementById('rJoin');
-  const roomInput = document.getElementById('roomInput');
-  const joinBtn = document.getElementById('joinBtn');
-  const joinError = document.getElementById('joinError');
-
-  const saved = localStorage.getItem(LS_KEY);
-  if(saved) roomInput.value = saved;
-
-  joinBtn.addEventListener('click', ()=>{
-    const code = roomInput.value.trim().toUpperCase();
-    if(!code){ joinError.textContent = "اكتب الكود أول"; return; }
-    localStorage.setItem(LS_KEY, code);
-    rJoin.classList.remove('active');
-    initReceiverExperience(code);
-  });
-}
-
-/* ================= RECEIVER: EXPERIENCE ================= */
-function initReceiverExperience(roomCode){
-  const rStart = document.getElementById('rStart');
-  const rIntro = document.getElementById('rIntro');
-  const rStereo = document.getElementById('rStereo');
-  const speedlines = document.getElementById('speedlines');
-  const introText = document.getElementById('introText');
-  const eyeL = document.getElementById('eyeL');
-  const eyeR = document.getElementById('eyeR');
-  const exitBtn = document.getElementById('exitBtn');
-  const topic = TOPIC_PREFIX + roomCode;
-  let lastTs = 0;
-
-  rStart.classList.add('active');
-
-  const client = new Paho.MQTT.Client(MQTT_HOST, MQTT_PORT, makeClientId());
-  client.onMessageArrived = (message)=>{
-    try{
-      const data = JSON.parse(message.payloadString);
-      if(data && data.ts && data.ts !== lastTs && data.videoId){
-        lastTs = data.ts;
-        playVideo(data.videoId);
-      }
-    }catch(e){}
-  };
-  client.connect({
-    useSSL: true,
-    timeout: 8,
-    onSuccess: ()=>{ client.subscribe(topic); },
-    onFailure: ()=>{}
-  });
-
-  function requestFS(){
-    const el = document.documentElement;
-    const fn = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
-    if(fn){ try{ fn.call(el); }catch(e){} }
-  }
-
-  function playChime(){
-    try{
-      const ctx = new (window.AudioContext||window.webkitAudioContext)();
-      const now = ctx.currentTime;
-      [523.25,659.25,783.99].forEach((freq,i)=>{
-        const o = ctx.createOscillator(); const g = ctx.createGain();
-        o.type='sine'; o.frequency.value=freq;
-        g.gain.setValueAtTime(0, now+i*0.18);
-        g.gain.linearRampToValueAtTime(0.05, now+i*0.18+0.08);
-        g.gain.exponentialRampToValueAtTime(0.0001, now+i*0.18+1.6);
-        o.connect(g); g.connect(ctx.destination);
-        o.start(now+i*0.18); o.stop(now+i*0.18+1.7);
-      });
-    }catch(e){}
-  }
-
-  function buildSpeedLines(){
-    speedlines.innerHTML='';
-    for(let i=0;i<46;i++){
-      const line = document.createElement('div');
-      line.className='line';
-      const angle = Math.random()*360;
-      const dist = 20 + Math.random()*10;
-      const len = 40 + Math.random()*220;
-      line.style.transform = `translate(-50%,-50%) rotate(${angle}deg) translateX(${dist}px)`;
-      line.style.width = '2px';
-      line.dataset.len = len;
-      speedlines.appendChild(line);
-    }
-  }
-
-  function runSpeedLines(){
-    speedlines.querySelectorAll('.line').forEach((line)=>{
-      const len = line.dataset.len;
-      const delay = Math.random()*400;
-      setTimeout(()=>{
-        line.style.transition = 'width 900ms cubic-bezier(.15,.7,.3,1), opacity 900ms ease';
-        line.style.opacity = '1';
-        line.style.width = len+'px';
-        setTimeout(()=>{ line.style.opacity='0'; }, 750);
-      }, delay);
-    });
-  }
-
-  function runIntro(){
-    rIntro.classList.add('active');
-    buildSpeedLines(); playChime();
-    requestAnimationFrame(runSpeedLines);
-    setTimeout(()=>{ introText.style.opacity = '1'; }, 1300);
-    setTimeout(()=>{
-      rIntro.style.transition = 'opacity .7s ease';
-      rIntro.style.opacity = '0';
-      setTimeout(()=>{
-        rIntro.classList.remove('active');
-        rIntro.style.opacity='1';
-        introText.style.opacity='0';
-        rStereo.classList.add('active');
-      }, 700);
-    }, 3400);
-  }
-
-  document.getElementById('enterBtn').addEventListener('click', ()=>{
-    requestFS();
-    rStart.style.opacity='0';
-    setTimeout(()=>{ rStart.style.display='none'; runIntro(); }, 500);
-  });
-
-  exitBtn.addEventListener('click', ()=>{
-    if(document.fullscreenElement) document.exitFullscreen();
-    location.reload();
-  });
-
-  function ytEmbedUrl(id){
-    return `https://www.youtube.com/embed/${id}?autoplay=1&playsinline=1&controls=0&rel=0&modestbranding=1`;
-  }
-  function playVideo(videoId){
-    const html = `<div class="eyeVideoWrap"><iframe src="${ytEmbedUrl(videoId)}" allow="autoplay; fullscreen" allowfullscreen></iframe></div>`;
-    eyeL.innerHTML = html; eyeR.innerHTML = html;
-  }
-}
-</script>
-</body>
-</html>
+$('tu1').onclick=()=>{tl=0;tut();show('tu')};$('tx').onclick=()=>show('h');
+$('tp').onclick=()=>{tl=(tl+24)%25;tut()};$('tq').onclick=()=>{tl=(tl+1)%25;tut()};
+function tut(){const c=gen(tl,11+tl);$('tn').textContent=`مرحلة ${tl+1} / 25`;
+$('ti').innerHTML=c.b.map((x,j)=>`<div style="flex:1;position:relative;min-height:0;display:flex">${bdH(x)}${c.qs==j?`<div class="qt">${esc(c.q)}</div>`:''}<div class="nt">لاعب ${j+1}</div></div>`).join('');
+$('ta').textContent='الجواب: '+(c.ty=='p'?'لاعب '+(c.a+1):c.a)}
+</script></body></html>
