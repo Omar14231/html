@@ -91,7 +91,7 @@ if(host){
  if(m.t=='join'){const i=pls.findIndex(p=>p.id==m.f);
   if(i<0){if(pls.length>=3||G.on){send({t:'full',to:m.f});return}pls.push({id:m.f,n:m.n})}else pls[i].n=m.n;
   send({t:'lobby',pl:pls});if(i>=0&&G.last)send(G.last)}
- else if(G.on&&m.t=='next'&&G.k<TT&&m.k==G.k&&pls.some(p=>p.id==m.f)){G.k++;G.k>=TT?hVote():bc()}
+ else if(G.on&&m.t=='next'&&G.k<TT&&m.k==G.k&&m.f==uid){G.k++;G.k>=TT?hVote():bc()}
  else if(G.on&&G.k>=TT&&m.t=='cast'){const s=pls.findIndex(p=>p.id==m.f);
   if(s>=0&&m.v>=0&&m.v<3&&m.v!=s&&G.vt[m.f]==null){G.vt[m.f]=m.v;Object.keys(G.vt).length>=3?hRes():hVote()}}
  else if(!G.on&&m.t=='again'&&m.f==uid)hStart();
@@ -111,6 +111,7 @@ $('rl').innerHTML=me?`🤫 <b>أنت برا السالفة!</b><br><span class="
 $('gi').textContent=`الجولة ${c.k/3+1|0}/2 — دور ${c.k+1}/${TT}`;
 $('sp').textContent=sp==seat?'🎤 دورك! تكلم':esc(pls[sp].n);
 $('hn').textContent=me?'سولف مثل ما تعرف الكلمة بدون ما ينكشف أمرك':'قول شي عن الكلمة بدون ما تذكرها';
+$('nx').style.display=host?'':'none';
 show('g')}
 function drawV(n){const b=$('vb');
 if(!voted){b.innerHTML=pls.map((p,j)=>j==seat?'':`<button class="b o" style="display:block;margin:6px auto;min-width:200px" data-j="${j}">${esc(p.n)}</button>`).join('');$('vm').textContent=''}
