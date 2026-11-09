@@ -1,0 +1,137 @@
+0
+<!DOCTYPE html>
+<html lang="ar" dir="rtl"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>برا السالفة</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#12051f;color:#fff;font-family:Cairo,sans-serif;overflow:hidden}
+.s{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px;background:radial-gradient(circle at 50% 15%,#5b1f8f,#12051f 72%);text-align:center}
+.s.on{display:flex}
+button,input{font:inherit}
+.b{background:linear-gradient(135deg,#ff8a1f,#e5483a);color:#fff;border:0;border-radius:14px;padding:13px 22px;font-weight:700;font-size:16px;min-width:200px}
+.b.o{background:#2a1245;border:1px solid #8a56c9;min-width:90px}
+.b:disabled{opacity:.4}
+.i{background:#1e0c33;border:1px solid #8a56c9;color:#fff;border-radius:12px;padding:12px;font-size:18px;text-align:center;width:min(260px,80vw)}
+h1{margin:0;font-size:28px}
+.pr{background:#2a1245;border:1px solid #8a56c9;border-radius:12px;padding:10px 24px;margin:4px;min-width:200px}
+.card{width:min(92vw,420px);border:2px solid #8a56c9;border-radius:18px;background:linear-gradient(160deg,#3b1766,#1d0a33);padding:18px;font-size:20px;line-height:1.6}
+.big{font-size:34px;font-weight:900;color:#ffb347}
+.sm{color:#cdb6ee;font-size:14px}
+</style></head><body>
+
+<div id="h" class="s on">
+<h1>🕵️ برا السالفة</h1>
+<div class="sm">افتحوا مكالمة صوتية والعبوا</div>
+<input id="nm" class="i" placeholder="اكتب اسمك" maxlength="12">
+<button class="b" id="cr">إنشاء روم</button>
+<div style="display:flex;gap:8px"><input id="rc" class="i" style="width:140px;letter-spacing:2px;text-transform:uppercase" placeholder="رقم الروم" maxlength="6"><button class="b o" id="jn">دخول</button></div>
+<div id="er" style="color:#ff8f8f;min-height:22px"></div>
+</div>
+
+<div id="l" class="s">
+<div>رقم الروم</div><h1 id="lc" style="letter-spacing:5px;font-family:monospace;font-size:38px"></h1>
+<div id="pl"></div><button class="b" id="st">ابدأ اللعبة</button><div id="lm" class="sm"></div>
+</div>
+
+<div id="g" class="s">
+<div id="gi" class="sm"></div>
+<div class="card" id="rl"></div>
+<div class="sm">الدور على</div>
+<div class="big" id="sp"></div>
+<div id="hn" class="sm"></div>
+<button class="b" id="nx">التالي ⏭</button>
+</div>
+
+<div id="v" class="s">
+<h1>🗳️ مين برا السالفة؟</h1>
+<div id="vb"></div>
+<div id="vm" class="sm"></div>
+</div>
+
+<div id="r" class="s">
+<div class="card" id="rs"></div>
+<button class="b" id="ag">العب من جديد</button>
+<div id="rm" class="sm"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
+<script>
+const $=id=>document.getElementById(id),esc=s=>String(s).replace(/[&<>"]/g,c=>'&#'+c.charCodeAt(0)+';');
+const show=id=>document.querySelectorAll('.s').forEach(e=>e.classList.toggle('on',e.id==id));
+const uid=Math.random().toString(36).slice(2,9);
+let name='';try{name=localStorage.getItem('pzn')||''}catch(e){}
+let room,host=false,cl,T,G,pls=[],seat=-1,run=0,joined=0,cur=null,voted=0;
+const TT=6;
+const C={'أكل':'كبسة بيتزا برجر شاورما مندي سوشي مضبي كنافة'.split(' '),
+'حيوان':'جمل صقر أسد قطة حصان دلفين ثعلب نمر'.split(' '),
+'مكان':'مطار مستشفى مدرسة بحر سوق مطعم مسجد ملعب'.split(' '),
+'جهاز':'جوال تلفزيون ثلاجة سيارة لابتوب مكيف سماعة'.split(' '),
+'مهنة':'طبيب معلم طيار طباخ شرطي مهندس حلاق'.split(' '),
+'رياضة':'كرة سباحة تنس ملاكمة جري شطرنج بلياردو'.split(' ')};
+const pk=a=>a[Math.random()*a.length|0];
+
+/* ===== الاتصال (MQTT عام بدون سيرفر) ===== */
+const err=s=>{show('h');$('er').textContent=s};
+function send(o){o.f=o.f||uid;const m=new Paho.MQTT.Message(JSON.stringify(o));m.destinationName=T;cl.send(m)}
+function conn(cb){T='barra7/'+room;cl=new Paho.MQTT.Client('broker.hivemq.com',8884,'br'+uid+Date.now());
+cl.onMessageArrived=m=>{try{on(JSON.parse(m.payloadString))}catch(e){}};
+cl.onConnectionLost=()=>{if(run)alert('انقطع الاتصال، حدّث الصفحة')};
+cl.connect({useSSL:true,timeout:8,onSuccess:()=>{cl.subscribe(T);cb()},onFailure:()=>err('تعذّر الاتصال بالإنترنت')})}
+
+/* ===== منطق المالك ===== */
+function hStart(){if(pls.length<3)return;const cat=pk(Object.keys(C));
+G.on=true;G.k=0;G.vt={};G.d={cat,w:pk(C[cat]),imp:Math.random()*3|0,f0:Math.random()*3|0};bc()}
+function bc(){G.last={t:'turn',k:G.k,...G.d};send(G.last)}
+function hVote(){G.last={t:'vote',n:Object.keys(G.vt).length};send(G.last)}
+function hRes(){const tl=[0,0,0];Object.values(G.vt).forEach(v=>tl[v]++);const mx=Math.max(...tl);
+G.on=false;G.last={t:'res',imp:G.d.imp,w:G.d.w,cat:G.d.cat,tl,caught:tl[G.d.imp]==mx&&tl.filter(x=>x==mx).length==1};send(G.last)}
+function on(m){
+if(host){
+ if(m.t=='join'){const i=pls.findIndex(p=>p.id==m.f);
+  if(i<0){if(pls.length>=3||G.on){send({t:'full',to:m.f});return}pls.push({id:m.f,n:m.n})}else pls[i].n=m.n;
+  send({t:'lobby',pl:pls});if(i>=0&&G.last)send(G.last)}
+ else if(G.on&&m.t=='next'&&G.k<TT&&m.k==G.k&&m.f==uid){G.k++;G.k>=TT?hVote():bc()}
+ else if(G.on&&G.k>=TT&&m.t=='cast'){const s=pls.findIndex(p=>p.id==m.f);
+  if(s>=0&&m.v>=0&&m.v<3&&m.v!=s&&G.vt[m.f]==null){G.vt[m.f]=m.v;Object.keys(G.vt).length>=3?hRes():hVote()}}
+ else if(!G.on&&m.t=='again'&&m.f==uid)hStart();
+}
+if(m.t=='full'&&m.to==uid){joined=0;err('الروم ممتلئ (3 لاعبين فقط) أو اللعبة بدأت');return}
+if(m.t=='lobby'){pls=m.pl;seat=pls.findIndex(p=>p.id==uid);if(seat<0)return;joined=1;if(!run){lob();show('l')}return}
+if(seat<0)return;
+if(m.t=='turn'){cur=m;run=1;voted=0;drawT()}
+else if(m.t=='vote'){run=1;drawV(m.n)}
+else if(m.t=='res'){run=0;drawR(m)}}
+
+/* ===== الواجهة ===== */
+function lob(){$('lc').textContent=room;$('pl').innerHTML=[0,1,2].map(j=>`<div class="pr">${pls[j]?(j?'':'👑 ')+esc(pls[j].n):'— بانتظار لاعب —'}</div>`).join('');
+$('st').style.display=host?'':'none';$('st').disabled=pls.length<3;$('lm').textContent=host?`اللاعبين ${pls.length}/3 — أرسل الرقم لأصحابك`:'بانتظار المالك يبدأ اللعبة…'}
+function drawT(){const c=cur,me=c.imp==seat,sp=(c.f0+c.k)%3;
+$('rl').innerHTML=me?`🤫 <b>أنت برا السالفة!</b><br><span class="sm">الفئة: ${esc(c.cat)}</span>`:`الكلمة السرية<br><b style="font-size:1.6em;color:#ffb347">${esc(c.w)}</b><br><span class="sm">الفئة: ${esc(c.cat)}</span>`;
+$('gi').textContent=`الجولة ${c.k/3+1|0}/2 — دور ${c.k+1}/${TT}`;
+$('sp').textContent=sp==seat?'🎤 دورك! تكلم':esc(pls[sp].n);
+$('hn').textContent=me?'سولف مثل ما تعرف الكلمة بدون ما ينكشف أمرك':'قول شي عن الكلمة بدون ما تذكرها';
+$('nx').style.display=host?'':'none';
+show('g')}
+function drawV(n){const b=$('vb');
+if(!voted){b.innerHTML=pls.map((p,j)=>j==seat?'':`<button class="b o" style="display:block;margin:6px auto;min-width:200px" data-j="${j}">${esc(p.n)}</button>`).join('');$('vm').textContent=''}
+else{b.innerHTML='';$('vm').textContent=`تم التصويت — بانتظار البقية (${n}/3)`}
+show('v')}
+function drawR(m){const t=m.imp,cl=m.caught;
+$('rs').innerHTML=`برا السالفة كان<br><div class="big">${esc(pls[t].n)}</div><br>الكلمة: <b>${esc(m.w)}</b><br><br>${pls.map((p,j)=>esc(p.n)+': '+m.tl[j]+' صوت').join('<br>')}<br><br><b>${cl?'🎉 انكشف! فاز الباقين':'😈 ما انكشف! فاز برا السالفة'}</b>`;
+$('ag').style.display=host?'':'none';$('rm').textContent=host?'':'بانتظار المالك يبدأ جولة جديدة…';show('r')}
+$('nx').onclick=()=>{if(cur)send({t:'next',k:cur.k})};
+$('vb').onclick=e=>{const j=e.target.dataset&&e.target.dataset.j;if(j!=null&&!voted){voted=1;send({t:'cast',v:+j});drawV(0)}};
+$('ag').onclick=()=>send({t:'again'});
+
+$('nm').value=name;
+const sv=()=>{name=$('nm').value.trim().slice(0,12);if(!name){$('er').textContent='اكتب اسمك أول';return 0}try{localStorage.setItem('pzn',name)}catch(e){}return 1};
+$('cr').onclick=()=>{if(!sv())return;room=Array.from({length:6},()=>'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'[Math.random()*32|0]).join('');
+host=true;pls=[{id:uid,n:name}];seat=0;G={on:false,k:0,d:null,vt:{},last:null};$('er').textContent='جارِ الاتصال…';
+conn(()=>{joined=1;lob();show('l')})};
+$('jn').onclick=()=>{if(!sv())return;const c=$('rc').value.trim().toUpperCase();if(!c){$('er').textContent='اكتب رقم الروم';return}
+room=c;host=false;$('er').textContent='جارِ الدخول…';
+conn(()=>{const j=()=>!joined&&send({t:'join',n:name});j();setTimeout(j,2500);setTimeout(()=>{if(!joined){err('الروم غير موجود أو المالك غير متصل');cl.disconnect()}},7000)})};
+$('st').onclick=hStart;
+</script></body></html>
