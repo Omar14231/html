@@ -132,8 +132,5 @@ conn(()=>{joined=1;lob();show('l')})};
 $('jn').onclick=()=>{if(!sv())return;const c=$('rc').value.trim().toUpperCase();if(!c){$('er').textContent='اكتب رقم الروم';return}
 room=c;host=false;$('er').textContent='جارِ الدخول…';
 conn(()=>{const j=()=>!joined&&send({t:'join',n:name});j();setTimeout(j,2500);setTimeout(()=>{if(!joined){err('الروم غير موجود أو المالك غير متصل');cl.disconnect()}},7000)})};
-$('st').onclick=hStart;body {
-    background-color: blue;
-}
-
+$('st').onclick=hStart;
 </script></body></html>
