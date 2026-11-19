@@ -2,171 +2,35 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>منصة الألعاب السحابية - ملء الشاشة</title>
+    <title>Fortnite - ملء الشاشة</title>
     <style>
-        body {
-            background-color: #0b0f19;
-            color: #ffffff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        html, body {
             margin: 0;
-            padding: 30px;
-            text-align: center;
-        }
-        h1 {
-            color: #38bdf8;
-            margin-bottom: 10px;
-        }
-        .games-grid {
-            display: flex;
-            justify-content: center;
-            gap: 25px;
-            flex-wrap: wrap;
-            margin-top: 30px;
-        }
-        .game-card {
-            background: #1e293b;
-            border-radius: 16px;
-            width: 300px;
-            padding: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            border: 1px solid #334155;
-            transition: transform 0.3s;
-        }
-        .game-card:hover {
-            transform: translateY(-8px);
-            border-color: #38bdf8;
-        }
-        .game-card img {
+            padding: 0;
             width: 100%;
-            height: 170px;
-            object-fit: cover;
-            border-radius: 10px;
+            height: 100%;
+            overflow: hidden;
+            background-color: #0f172a;
         }
-        .btn-play {
-            background: linear-gradient(45deg, #0284c7, #38bdf8);
-            color: white;
-            border: none;
-            padding: 12px 25px;
-            font-size: 16px;
-            font-weight: bold;
-            border-radius: 8px;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 15px;
-        }
-        .btn-play:hover {
-            opacity: 0.9;
-        }
-
-        /* حاوية الشاشة الكاملة الحقيقية */
-        #fullscreen-container {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
+        .game-container {
             width: 100vw;
             height: 100vh;
-            background: #000;
-            z-index: 9999;
+            box-sizing: border-box;
+            border: 3px solid #38bdf8;
+            overflow: hidden;
         }
         iframe {
             width: 100%;
             height: 100%;
             border: none;
         }
-        /* زر الخروج العائم أعلى الشاشة */
-        .exit-btn {
-            position: fixed;
-            top: 15px;
-            right: 15px;
-            background: rgba(220, 38, 38, 0.85);
-            color: white;
-            border: none;
-            padding: 10px 18px;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            z-index: 10000;
-            backdrop-filter: blur(5px);
-        }
-        .exit-btn:hover {
-            background: rgb(220, 38, 38);
-        }
     </style>
 </head>
 <body>
 
-    <h1>العب أقوى الألعاب سحابياً ومجاناً</h1>
-    <p>بدون تحميل • أعلى جودة • وضع الشاشة الكاملة</p>
-
-    <div class="games-grid">
-        <!-- بطاقة فورت نايت -->
-        <div class="game-card">
-            <img src="https://cdn2.unrealengine.com/fortnite-chapter-5-season-1-key-art-1920x1080-9549c242797e.jpg" alt="Fortnite">
-            <h2>Fortnite</h2>
-            <p>تشغيل بملء الشاشة الكاملة</p>
-            <button class="btn-play" onclick="launchFortniteFullScreen()">العب ملء الشاشة</button>
-        </div>
-
-        <!-- بطاقة روبلوكس -->
-        <div class="game-card">
-            <img src="https://images.rbxcdn.com/d66ae37d46e00a1ecacfe9531986690a.jpg" alt="Roblox">
-            <h2>Roblox</h2>
-            <p>تشغيل داخل الموقع بملء الشاشة</p>
-            <button class="btn-play" onclick="launchInsideFullScreen('https://web.cloudmoonapp.com/game/com.roblox.client/')">العب ملء الشاشة</button>
-        </div>
+    <div class="game-container">
+        <iframe src="https://www.xbox.com/play/games/fortnite/BT5P2X999VH2" allowfullscreen allow="fullscreen; gamepad"></iframe>
     </div>
-
-    <!-- شاشة اللعب الكاملة -->
-    <div id="fullscreen-container">
-        <button class="exit-btn" onclick="exitGame()">✕ خروج من اللعبة</button>
-        <iframe id="game-frame" src="" allow="fullscreen; gamepad; microphone; camera"></iframe>
-    </div>
-
-    <script>
-        // 1. تشغيل اللعبة داخل الموقع وتفعيل وضع الشاشة الكاملة تلقائياً (F11)
-        function launchInsideFullScreen(url) {
-            const container = document.getElementById('fullscreen-container');
-            const frame = document.getElementById('game-frame');
-            
-            frame.src = url;
-            container.style.display = 'block';
-
-            // إجبار المتصفح على الدخول في وضع ملء الشاشة الحقيقي
-            if (container.requestFullscreen) {
-                container.requestFullscreen();
-            } else if (container.webkitRequestFullscreen) { /* سفاري */
-                container.webkitRequestFullscreen();
-            } else if (container.msRequestFullscreen) { /* إيدج */
-                container.msRequestFullscreen();
-            }
-        }
-
-        // 2. تشغيل فورت نايت على كامل أبعاد الشاشة المتاحة
-        function launchFortniteFullScreen() {
-            const w = window.screen.availWidth;
-            const h = window.screen.availHeight;
-            window.open(
-                'https://www.xbox.com/play/games/fortnite/BT5P2X999VH2',
-                'FortniteFullScreen',
-                `width=${w},height=${h},top=0,left=0,fullscreen=yes,menubar=no,toolbar=no,location=no,status=no`
-            );
-        }
-
-        // 3. دالة الخروج من الشاشة الكاملة وإيقاف اللعبة
-        function exitGame() {
-            const container = document.getElementById('fullscreen-container');
-            const frame = document.getElementById('game-frame');
-            
-            frame.src = ''; // إيقاف اللعبة لتوفير موارد الجهاز
-            container.style.display = 'none';
-
-            if (document.fullscreenElement) {
-                document.exitFullscreen();
-            }
-        }
-    </script>
 
 </body>
 </html>
