@@ -866,14 +866,34 @@ input[type=range]{accent-color:#c47789}
 .pad{position:relative;width:min(100%,240px);aspect-ratio:1;margin:8px auto;border-radius:18px;direction:ltr;touch-action:none;overflow:hidden;border:1px solid #3a3b42;background:radial-gradient(circle,#0000 0 22%,#ffffff12 23% 24%,#0000 25% 47%,#ffffff12 48% 49%,#0000 50%),linear-gradient(#ffffff0a 1px,transparent 1px) 0 0/25% 25%,linear-gradient(90deg,#ffffff0a 1px,transparent 1px) 0 0/25% 25%,#141519}
 .pad .hd{position:absolute;left:50%;top:50%;width:46px;height:46px;margin:-23px;border-radius:50%;display:grid;place-items:center;font-size:11px;color:#fff;background:radial-gradient(circle at 35% 30%,#d9a0b2,#7a5a8c 60%,#2d2840);box-shadow:0 0 18px #c4778955;pointer-events:none}
 .pad .sr{position:absolute;width:26px;height:26px;margin:-13px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#ff8aa0 45%,#d8426c);box-shadow:0 0 0 6px #ff657e33,0 0 22px #ff657e;pointer-events:none}
+#gal{position:fixed;inset:0;z-index:110;display:flex;align-items:flex-end;justify-content:center;background:#05060acc;backdrop-filter:blur(6px);opacity:0;visibility:hidden;transition:opacity .25s,visibility 0s .25s}
+#gal.on{opacity:1;visibility:visible;transition:opacity .25s}
+#gal .lp{width:min(100%,560px);height:84%;display:flex;flex-direction:column;background:#17181d;border:1px solid #33343a;border-bottom:0;border-radius:24px 24px 0 0;padding:14px 14px 0;transform:translateY(60px) scale(.97);transition:transform .45s cubic-bezier(.2,1.2,.4,1)}
+#gal.on .lp{transform:none}
+#gal .lh{display:flex;justify-content:space-between;align-items:center;font-size:19px;margin-bottom:10px}
+#gal .lh button{width:36px;height:36px;border-radius:50%;background:#25262c}
+#gal .ls{width:100%;padding:12px 14px;border-radius:14px;border:1px solid #84616f;background:#121317;color:#fff;font:inherit;font-size:16px}
+#gal .lg{display:flex;gap:8px;overflow-x:auto;padding:10px 0;scrollbar-width:none;flex:none}
+#gal .lg button{flex:none;padding:7px 14px;border-radius:99px;background:#25262c;border:1px solid #393a41;font-size:13px}
+#gal .lg .on{background:linear-gradient(120deg,#a96884,#bb805f);border-color:transparent;color:#fff}
+#gal .lr{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));overscroll-behavior:contain}
+#gal .li{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:14px;background:#202126;border:1px solid #2f3036;animation:libIn .4s both;animation-delay:calc(var(--i,0)*35ms)}
+#gal .lm{flex:1;min-width:0}
+#gal .lm b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#gal .lm span{font-size:11px;color:#a9a6b0}
+#gal .li button{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:#2c2d34}
+#gal .li .la{background:linear-gradient(120deg,#a96884,#bb805f);color:#fff}
+#gal .li .la.ld{opacity:.5;animation:cSpin 1s linear infinite}
+#gal .sk{flex:none;height:56px;border-radius:14px;background:linear-gradient(90deg,#202126 30%,#2b2c33 50%,#202126 70%) 0 0/200% 100%;animation:cSh 1.1s linear infinite}
+#gal .em{text-align:center;color:#a9a6b0;padding:30px 10px;line-height:1.8}
 </style>
 <script>
 (()=>{
 const QA=(a,e)=>L=='en'?e:a;
 
 /* ---- delete dialog ---- */
-window.cfm=name=>new Promise(r=>{const d=document.createElement('div');d.id='cfm';
-d.innerHTML=`<div class="cd"><div class="ti">${ic('trash',40)}</div><h3>${QA('حذف المشروع؟','Delete project?')}</h3><p>${esc(name)}<br>${QA('ما تقدر ترجعه بعد الحذف.','This cannot be undone.')}</p><div class="bt"><button class="no">${QA('إلغاء','Cancel')}</button><button class="dn">${QA('نعم، احذف','Yes, delete')}</button></div></div>`;
+window.cfm=(name,ti)=>new Promise(r=>{const d=document.createElement('div');d.id='cfm';
+d.innerHTML=`<div class="cd"><div class="ti">${ic('trash',40)}</div><h3>${ti||QA('حذف المشروع؟','Delete project?')}</h3><p>${esc(name)}<br>${QA('ما تقدر ترجعه بعد الحذف.','This cannot be undone.')}</p><div class="bt"><button class="no">${QA('إلغاء','Cancel')}</button><button class="dn">${QA('نعم، احذف','Yes, delete')}</button></div></div>`;
 document.body.append(d);requestAnimationFrame(()=>requestAnimationFrame(()=>d.classList.add('on')));
 const f=v=>{d.classList.remove('on');setTimeout(()=>d.remove(),320);r(v)};
 d.querySelector('.no').onclick=()=>f(false);d.querySelector('.dn').onclick=()=>f(true);d.onclick=e=>{if(e.target==d)f(false)}});
@@ -927,36 +947,82 @@ const g=Math.min(2,Math.max(.3,k.vol)),h=v.map(x=>Math.max(1.5,Math.tanh(x*g*1.3
 let d='M0 '+(50-h[0]);for(let i=1;i<=n;i++)d+='L'+i+' '+(50-h[i]);for(let i=n;i>=0;i--)d+='L'+i+' '+(50+h[i]);
 return`<svg class="wf" viewBox="0 0 ${n} 100" preserveAspectRatio="none"><path d="${d}Z" style="fill:#ffffff55;stroke:#ffffffb0;stroke-width:.8;vector-effect:non-scaling-stroke;stroke-linejoin:round"/></svg>`};
 
-/* ---- song library (Openverse, free CC music) ---- */
-const GN=[['funk','Funk'],['horror','رعب'],['phonk','Phonk'],['lofi','Lo-fi'],['electronic','إلكتروني'],['hip hop','Hip Hop'],['rock','Rock'],['cinematic','سينمائي'],['jazz','Jazz'],['arabic','عربي'],['ambient','هادئ'],['sfx','مؤثرات']];
-const LB={q:'funk',p:1,busy:0,more:1,pid:null},pa=new Audio();let LD,LR;
+/* ---- song library: free (addable) + all songs (preview + links, with covers) ---- */
+const GN=[['funk','Funk'],['horror','رعب'],['phonk','Phonk'],['lofi','Lo-fi'],['electronic','إلكتروني'],['hip hop','Hip Hop'],['pop','Pop'],['rock','Rock'],['cinematic','سينمائي'],['jazz','Jazz'],['arabic','عربي'],['ambient','هادئ'],['sfx','مؤثرات']];
+const LB={q:'funk',p:1,busy:0,more:1,pid:null,src:'free'},pa=new Audio();let LD,LR;
 const icons=()=>LR&&LR.querySelectorAll('.lp1').forEach(x=>x.innerHTML=ic(x.dataset.id==LB.pid&&!pa.paused?'pause':'play',20));
 pa.onplay=pa.onpause=pa.onended=icons;
 const closeLib=()=>{pa.pause();LD.classList.remove('on')};
-async function ld(reset){if(LB.busy)return;if(reset){LB.p=1;LB.more=1;LR.innerHTML=''}if(!LB.more)return;LB.busy=1;const q=LB.q,sk=document.createElement('div');sk.className='sk';LR.append(sk);
-try{const sfx=q=='sfx',u='https://api.openverse.org/v1/audio/?q='+encodeURIComponent(sfx?'sound':q)+'&page='+LB.p+'&page_size=20&mature=false&category='+(sfx?'sound_effect':'music'),rs=await fetch(u);if(!rs.ok)throw 0;const j=await rs.json();if(q!=LB.q)return;sk.remove();
-const a=j.results||[];if(!a.length&&LB.p==1)LR.innerHTML='<div class="em">'+QA('ما لقيت نتائج، جرّب كلمة ثانية','No results, try another word')+'</div>';
-a.forEach((r,i)=>{const d=el('<div class="li"><button class="lp1"></button><div class="lm"><b></b><span></span></div><button class="la"></button></div>').firstChild;d.style.setProperty('--i',i);
-d.querySelector('b').textContent=r.title||'—';d.querySelector('span').textContent=[r.creator,r.duration?fmt(r.duration/1000):'',(r.license||'').toUpperCase()].filter(Boolean).join(' · ');
+const LKS=[['YouTube','https://www.youtube.com/results?search_query='],['Spotify','https://open.spotify.com/search/'],['TikTok','https://www.tiktok.com/search?q=']];
+async function ld(reset){if(LB.busy)return;if(reset){LB.p=1;LB.more=1;LR.innerHTML=''}if(!LB.more)return;LB.busy=1;const q=LB.q,src=LB.src,sk=document.createElement('div');sk.className='sk';LR.append(sk);
+try{let a;const sfx=q=='sfx';
+if(src=='all'){const rs=await fetch('https://itunes.apple.com/search?media=music&entity=song&limit=25&offset='+(LB.p-1)*25+'&term='+encodeURIComponent(sfx?'sound effects':q));if(!rs.ok)throw 0;const j=await rs.json();if(q!=LB.q||src!=LB.src)return;
+a=(j.results||[]).map(x=>({id:'i'+x.trackId,title:x.trackName,creator:x.artistName,duration:x.trackTimeMillis,thumbnail:(x.artworkUrl100||'').replace('100x100','300x300'),url:x.previewUrl,lk:1}));LB.more=a.length>=25}
+else{const rs=await fetch('https://api.openverse.org/v1/audio/?q='+encodeURIComponent(sfx?'sound':q)+'&page='+LB.p+'&page_size=20&mature=false&category='+(sfx?'sound_effect':'music'));if(!rs.ok)throw 0;const j=await rs.json();if(q!=LB.q||src!=LB.src)return;a=j.results||[];LB.more=a.length>=20&&LB.p<(j.page_count||1)}
+sk.remove();if(!a.length&&LB.p==1)LR.innerHTML='<div class="em">'+QA('ما لقيت نتائج، جرّب كلمة ثانية','No results, try another word')+'</div>';
+a.forEach((r,i)=>{const d=el('<div class="li"><img class="cv" alt=""><button class="lp1"></button><div class="lm"><b></b><span></span><div class="lk"></div></div><button class="la"></button></div>').firstChild;d.style.setProperty('--i',i);
+const cv=d.querySelector('.cv');if(r.thumbnail){cv.src=r.thumbnail;cv.onerror=()=>cv.removeAttribute('src')}
+d.querySelector('b').textContent=r.title||'—';d.querySelector('span').textContent=[r.creator,r.duration?fmt(r.duration/1000):'',r.lk?QA('معاينة 30ث','30s preview'):(r.license||'').toUpperCase()].filter(Boolean).join(' · ');
 const p=d.querySelector('.lp1'),b=d.querySelector('.la');p.dataset.id=r.id;p.innerHTML=ic('play',20);b.innerHTML=ic('plus',20);
-p.onclick=()=>{if(LB.pid==r.id&&!pa.paused){pa.pause();return}LB.pid=r.id;pa.src=r.url;pa.play().catch(()=>toast(QA('ما اشتغلت المعاينة','Preview failed')))};
+if(r.lk){b.style.display='none';const k=d.querySelector('.lk');LKS.forEach(([n,u])=>{const x=document.createElement('a');x.textContent=n;x.href=u+encodeURIComponent((r.title||'')+' '+(r.creator||''));x.target='_blank';x.rel='noopener';k.append(x)})}
+p.onclick=()=>{if(!r.url)return;if(LB.pid==r.id&&!pa.paused){pa.pause();return}LB.pid=r.id;pa.src=r.url;pa.play().catch(()=>toast(QA('ما اشتغلت المعاينة','Preview failed')))};
 b.onclick=async()=>{if(b.disabled)return;b.disabled=true;b.classList.add('ld');
 try{pa.pause();const bl=await (await fetch(r.url)).blob();if(!bl.size)throw 0;const f=new File([bl],(r.title||'song')+'.mp3',{type:bl.type&&bl.type.startsWith('audio')?bl.type:'audio/mpeg'});busy(1);try{await addFile(f,'aud')}finally{busy(0)}closeLib();toast(QA('انضافت الأغنية للشريط','Added to timeline'))}
 catch(x){toast(QA('هذي الأغنية ما تسمح بالتحميل، جرّب غيرها','This track blocks download, try another'))}b.disabled=false;b.classList.remove('ld')};
-LR.append(d)});LB.more=a.length>=20&&LB.p<(j.page_count||1)}
+LR.append(d)})}
 catch(x){sk.remove();if(LB.p==1)LR.innerHTML='<div class="em">'+QA('تعذّر تحميل المكتبة. تأكد من الإنترنت وجرّب مرة ثانية.','Could not load the library. Check your connection and try again.')+'</div>'}
 finally{sk.remove();LB.busy=0}}
 function openLib(){if(!LD){LD=document.createElement('div');LD.id='lib';
-LD.innerHTML='<div class="lp"><div class="lh"><b></b><button class="lx">✕</button></div><input class="ls" type="search"><div class="lg"></div><div class="lr"></div></div>';document.body.append(LD);LR=LD.querySelector('.lr');
-const s=LD.querySelector('.ls'),g=LD.querySelector('.lg');LD.querySelector('.lx').onclick=closeLib;LD.onclick=e=>{if(e.target==LD)closeLib()};
+LD.innerHTML='<div class="lp"><div class="lh"><b></b><button class="lx">✕</button></div><input class="ls" type="search"><div class="lt"><button data-s="free"></button><button data-s="all"></button></div><div class="lg"></div><div class="lr"></div></div>';document.body.append(LD);LR=LD.querySelector('.lr');
+const s=LD.querySelector('.ls'),g=LD.querySelector('.lg'),tb=LD.querySelectorAll('.lt button');LD.querySelector('.lx').onclick=closeLib;LD.onclick=e=>{if(e.target==LD)closeLib()};
+const mark=()=>{g.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.k==LB.q));tb.forEach(b=>b.classList.toggle('on',b.dataset.s==LB.src))};
 GN.forEach(([k,n])=>{const b=document.createElement('button');b.textContent=n;b.dataset.k=k;b.onclick=()=>{LB.q=k;s.value='';mark();ld(1)};g.append(b)});
-const mark=()=>g.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.k==LB.q));LD._mark=mark;
+tb.forEach(b=>b.onclick=()=>{LB.src=b.dataset.s;pa.pause();mark();ld(1)});
 let tm;s.oninput=()=>{clearTimeout(tm);tm=setTimeout(()=>{LB.q=s.value.trim()||'music';mark();ld(1)},450)};
 LR.onscroll=()=>{if(LB.more&&!LB.busy&&LR.scrollTop+LR.clientHeight>LR.scrollHeight-140){LB.p++;ld(0)}};mark()}
-LD.querySelector('.lh b').textContent=QA('مكتبة الأغاني','Song library');LD.querySelector('.ls').placeholder=QA('ابحث عن أغنية…','Search songs…');
+LD.querySelector('.lh b').textContent=QA('مكتبة الأغاني','Song library');LD.querySelector('.ls').placeholder=QA('ابحث عن أغنية أو فنان…','Search song or artist…');
+const tb=LD.querySelectorAll('.lt button');tb[0].textContent=QA('مجانية (تنضاف للشريط)','Free (add to timeline)');tb[1].textContent=QA('كل الأغاني (معاينة + روابط)','All songs (preview + links)');
 requestAnimationFrame(()=>requestAnimationFrame(()=>LD.classList.add('on')));if(!LR.children.length)ld(1)}
 window.openLib=openLib;
 nav();
+})();
+</script>
+<style id="cliply-v3">
+#lib .cv,#gal .cv{width:48px;height:48px;flex:none;border-radius:10px;object-fit:cover;background:linear-gradient(135deg,#a96884,#5b4a78)}
+#lib .lt{display:flex;gap:8px;margin-top:10px;flex:none}
+#lib .lt button{flex:1;padding:8px 6px;border-radius:12px;background:#25262c;border:1px solid #393a41;font-size:12px;font-weight:700}
+#lib .lt .on{background:#33272e;border-color:#c47789;color:#e2b8c0}
+#lib .lk{display:flex;gap:10px;margin-top:3px}
+#lib .lk a{font-size:11px;color:#e2b8c0;text-decoration:underline}
+#gal .lr.gg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;align-content:start}
+#gal .em{grid-column:1/-1}
+#gal .gt{position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;background:#202126;animation:libIn .35s both;animation-delay:calc(var(--i,0)*30ms)}
+#gal .gt img{width:100%;height:100%;object-fit:cover;display:block}
+#gal .gx{position:absolute;top:4px;inset-inline-end:4px;width:26px;height:26px;border-radius:50%;background:#000a;color:#fff;font-size:12px}
+#gal .gt.ok:after{content:"✓";position:absolute;inset:0;display:grid;place-items:center;background:#a9688499;font-size:34px;color:#fff;animation:libIn .2s}
+</style>
+<script>
+(()=>{
+const QA=(a,e)=>L=='en'?e:a;let GD,GR,GM='main';
+const gidx=async()=>(await idb('get','galidx'))||[];
+const gth=f=>new Promise(res=>{const u=URL.createObjectURL(f),im=new Image();im.onload=()=>{const k=document.createElement('canvas'),s=Math.min(1,320/Math.max(im.naturalWidth,im.naturalHeight));k.width=Math.max(1,im.naturalWidth*s|0);k.height=Math.max(1,im.naturalHeight*s|0);k.getContext('2d').drawImage(im,0,0,k.width,k.height);URL.revokeObjectURL(u);res(k.toDataURL('image/jpeg',.7))};im.onerror=()=>{URL.revokeObjectURL(u);res('')};im.src=u});
+async function saveImg(f){const th=await gth(f);if(!th)return;const id=Date.now()+''+(Math.random()*1e3|0),ix=await gidx();await idb('set','gb'+id,f);ix.unshift({id,th,name:f.name||'img'});await idb('set','galidx',ix);if(GD&&GD.classList.contains('on'))gdraw()}
+async function gdraw(){const ix=await gidx();GR.innerHTML='';
+if(!ix.length){GR.innerHTML='<div class="em">'+QA('ما عندك صور محفوظة بعد. اضغط «من الجهاز»، وكل صورة تختارها تنحفظ هنا لك لحالك على جهازك فقط.','No saved images yet. Tap "From device"; each image you pick is saved here, private on this device only.')+'</div>';return}
+ix.forEach((e,i)=>{const d=el('<div class="gt"><img alt=""><button class="gx">✕</button></div>').firstChild;d.style.setProperty('--i',Math.min(i,20));d.querySelector('img').src=e.th;
+d.onclick=async ev=>{if(ev.target.closest('.gx'))return;const b=await idb('get','gb'+e.id);if(!b)return toast(QA('الصورة مو موجودة','Image missing'));const f=new File([b],e.name||'img.jpg',{type:b.type||'image/jpeg'});f._g=1;d.classList.add('ok');busy(1);try{await addFile(f,GM)}finally{busy(0)}setTimeout(()=>d.classList.remove('ok'),700)};
+d.querySelector('.gx').onclick=async ev=>{ev.stopPropagation();if(!await cfm(QA('هذي الصورة','This image'),QA('حذف الصورة؟','Delete image?')))return;await idb('del','gb'+e.id);await idb('set','galidx',(await gidx()).filter(q=>q.id!=e.id));gdraw()};
+GR.append(d)})}
+const closeGal=()=>GD.classList.remove('on');
+function openGal(mode){GM=mode;if(!GD){GD=document.createElement('div');GD.id='gal';
+GD.innerHTML='<div class="lp"><div class="lh"><b></b><button class="lx">✕</button></div><div class="lg"><button class="on dv"></button></div><div class="lr gg"></div></div>';document.body.append(GD);GR=GD.querySelector('.lr');
+GD.querySelector('.lx').onclick=closeGal;GD.onclick=e=>{if(e.target==GD)closeGal()};GD.querySelector('.dv').onclick=()=>{closeGal();_pf(GM)}}
+GD.querySelector('.lh b').textContent=QA('صوري','My images');GD.querySelector('.dv').textContent='＋ '+QA('من الجهاز (فيديو / صور)','From device (video / images)');
+requestAnimationFrame(()=>requestAnimationFrame(()=>GD.classList.add('on')));gdraw()}
+const _af=addFile;addFile=async function(f,mode){if(f&&!f._g&&f.type&&f.type.startsWith('image/'))saveImg(f);return _af(f,mode)};
+const _pf=pickFile;pickFile=function(mode){if(mode=='main'||mode=='ov')openGal(mode);else _pf(mode)};
+window.openGal=openGal;window._saveImg=saveImg;
+const _ex=TO.export;TO.export=()=>{const o=_ex();if(S.q>=1440)o.push(hint(QA('تنبيه: التصدير بصيغة 4K/2K يسجّل بالوقت الحقيقي، فلو جهازك ضعيف يتقطّع. للجوال الأفضل 1080p بـ30 FPS، و4K للأجهزة القوية.','Note: 4K/2K export records in real time, so a weak device may stutter. On phones 1080p at 30 FPS is safest; use 4K on strong devices.')));return o};
 })();
 </script>
 </body>
