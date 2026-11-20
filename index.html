@@ -241,6 +241,11 @@ const SECRET_CODE="11133334";
 const POLL_MS=3000;
 const TBL=SUPA_URL+"/rest/v1/orders";
 const H={"apikey":SUPA_KEY,"Content-Type":"application/json"};
+async function chk(r,label){
+  if(r.ok)return;
+  let t="";try{t=await r.text();}catch(e){}
+  throw new Error(label+" ["+r.status+"] "+t.slice(0,220));
+}
 
 const fromRow=r=>r&&({id:r.id,items:r.items||[],total:r.total,payment:r.payment,customerName:r.customer_name,phone:r.phone,
   location:r.location,housePhoto:r.house_photo||"",notes:r.notes||"",status:r.status,staffName:r.staff_name||"",
@@ -249,23 +254,23 @@ const fromRow=r=>r&&({id:r.id,items:r.items||[],total:r.total,payment:r.payment,
 const store={
   async list(){
     const r=await fetch(TBL+"?select=*&order=created_at.desc&limit=200",{headers:H,cache:"no-store"});
-    if(!r.ok)throw new Error("list");return (await r.json()).map(fromRow);
+    await chk(r,"list");return (await r.json()).map(fromRow);
   },
   async get(id){
     const r=await fetch(TBL+"?select=*&id=eq."+encodeURIComponent(id),{headers:H,cache:"no-store"});
-    if(!r.ok)throw new Error("get");const d=await r.json();return d.length?fromRow(d[0]):null;
+    await chk(r,"get");const d=await r.json();return d.length?fromRow(d[0]):null;
   },
   async insert(o){
     const body={items:o.items,total:o.total,payment:o.payment,customer_name:o.customerName,phone:o.phone,
       location:o.location,house_photo:o.housePhoto,notes:o.notes};
     const r=await fetch(TBL,{method:"POST",headers:{...H,"Prefer":"return=representation"},body:JSON.stringify(body)});
-    if(!r.ok)throw new Error("insert");return fromRow((await r.json())[0]);
+    await chk(r,"insert");return fromRow((await r.json())[0]);
   },
   async patch(id,obj){
     const map={status:"status",staffName:"staff_name",rating:"rating",ratingComment:"rating_comment"};
     const body={};for(const k in obj)body[map[k]]=obj[k];
     const r=await fetch(TBL+"?id=eq."+encodeURIComponent(id),{method:"PATCH",headers:H,body:JSON.stringify(body)});
-    if(!r.ok)throw new Error("patch");
+    await chk(r,"patch");
   }
 };
 
@@ -335,12 +340,12 @@ const menuSections=[
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 let activeCategory="الكل",cart=[],selectedPayment="",housePhotoDataUrl="",ratingValue=0,bannerTimer=null;
 
-function showTopBanner(t,b){
+function showTopBanner(t,b,ms){
   const el=document.getElementById("topBanner");
   document.getElementById("bannerTitle").textContent=t;
   document.getElementById("bannerBody").textContent=b;
   el.classList.add("show");clearTimeout(bannerTimer);
-  bannerTimer=setTimeout(()=>el.classList.remove("show"),5500);
+  bannerTimer=setTimeout(()=>el.classList.remove("show"),ms||5500);
 }
 function sysNotify(title,body){
   try{
@@ -461,7 +466,8 @@ async function submitOrder(e){
     showTopBanner("تم إرسال طلبك ✅","رقم طلبك #"+saved.id+" بانتظار قبول الموظف.");
   }catch(err){
     closeModal("loadingOrderModal");openModal("detailsModal");
-    showTopBanner("تعذّر الإرسال","تأكد من الإنترنت وحاول مرة ثانية.");
+    console.error(err);
+    showTopBanner("تعذّر الإرسال — السبب:",String(err&&err.message||err),20000);
   }
 }
 
