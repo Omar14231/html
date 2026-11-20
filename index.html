@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مذاق هلا وغلا | منيو ونظام تجربة الطلبات</title>
+    <title>مذاق هلا وغلا | المنيو والسلة ونظام التجربة</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,700;1,700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
@@ -18,7 +18,6 @@
             --gold-dim: rgba(245, 195, 81, 0.35);
             --text-main: #ffffff;
             --text-muted: #cfc4d6;
-            --success: #22c55e;
         }
 
         * {
@@ -36,7 +35,6 @@
             overflow-x: hidden;
         }
 
-        /* الغبار الذهبي على الحواف */
         #goldDustCanvas {
             position: fixed;
             inset: 0;
@@ -61,11 +59,7 @@
             opacity: 0.06;
         }
 
-        .secret-dot-btn:active {
-            opacity: 0.35;
-        }
-
-        /* شريط الإشعار العلوي داخل التطبيق */
+        /* إشعار علوي */
         .top-push-banner {
             position: fixed;
             top: -120px;
@@ -84,9 +78,7 @@
             gap: 12px;
         }
 
-        .top-push-banner.show {
-            top: 14px;
-        }
+        .top-push-banner.show { top: 14px; }
 
         .push-icon {
             width: 38px;
@@ -100,21 +92,12 @@
             flex-shrink: 0;
         }
 
-        .push-content strong {
-            display: block;
-            color: var(--gold-bright);
-            font-size: 0.95rem;
-        }
+        .push-content strong { display: block; color: var(--gold-bright); font-size: 0.95rem; }
+        .push-content span { color: var(--text-muted); font-size: 0.85rem; }
 
-        .push-content span {
-            color: var(--text-muted);
-            font-size: 0.85rem;
-        }
-
-        /* الإطار الذهبي الرئيسي */
         .app-shell {
             max-width: 1320px;
-            margin: 18px auto 95px;
+            margin: 18px auto 100px;
             padding: 22px;
             border: 2px solid var(--gold-dim);
             border-radius: 26px;
@@ -123,10 +106,9 @@
             position: relative;
         }
 
-        /* الهيدر والشعر والشعار */
         .hero {
             text-align: center;
-            padding: 16px 10px 28px;
+            padding: 16px 10px 26px;
         }
 
         .badge {
@@ -174,10 +156,10 @@
             font-size: 0.95rem;
         }
 
-        /* شريط تتبع حالة طلب الزبون الحالي */
+        /* تتبع الطلب الحالي */
         .live-order-tracker {
             display: none;
-            margin: 18px auto 26px;
+            margin: 18px auto 24px;
             max-width: 900px;
             background: linear-gradient(135deg, rgba(34, 18, 44, 0.96), rgba(18, 10, 24, 0.98));
             border: 1.5px solid var(--gold);
@@ -186,9 +168,7 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.6);
         }
 
-        .live-order-tracker.active {
-            display: block;
-        }
+        .live-order-tracker.active { display: block; }
 
         .tracker-top {
             display: flex;
@@ -196,7 +176,7 @@
             justify-content: space-between;
             align-items: center;
             gap: 10px;
-            margin-bottom: 14px;
+            margin-bottom: 12px;
         }
 
         .status-pill {
@@ -232,12 +212,12 @@
             font-weight: 700;
         }
 
-        /* تبويبات الأقسام والبحث */
+        /* البحث والأقسام */
         .filter-bar {
             display: flex;
             flex-direction: column;
             gap: 14px;
-            margin-bottom: 26px;
+            margin-bottom: 24px;
         }
 
         .search-input {
@@ -253,9 +233,7 @@
             outline: none;
         }
 
-        .search-input:focus {
-            border-color: var(--gold);
-        }
+        .search-input:focus { border-color: var(--gold); }
 
         .cats-scroll {
             display: flex;
@@ -283,7 +261,6 @@
             border-color: var(--gold-bright);
         }
 
-        /* شبكة أقسام المنيو */
         .menu-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
@@ -338,19 +315,9 @@
             border-bottom: 1px dashed rgba(245, 195, 81, 0.15);
         }
 
-        .item-row:last-child {
-            border-bottom: none;
-        }
-
-        .item-name {
-            font-weight: 700;
-            font-size: 0.98rem;
-        }
-
-        .item-desc {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-        }
+        .item-row:last-child { border-bottom: none; }
+        .item-name { font-weight: 700; font-size: 0.98rem; }
+        .item-desc { font-size: 0.8rem; color: var(--text-muted); }
 
         .price-btns {
             display: flex;
@@ -371,55 +338,62 @@
             transition: 0.2s;
         }
 
-        .pick-btn:hover {
-            background: var(--gold);
-            color: #130916;
-        }
+        .pick-btn:hover { background: var(--gold); color: #130916; }
 
-        /* شريط الشراء السفلي الثابت */
+        /* شريط السفلي: زر السلة وزر الشراء */
         .bottom-buy-bar {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            background: rgba(16, 9, 21, 0.95);
+            background: rgba(16, 9, 21, 0.96);
             backdrop-filter: blur(12px);
             border-top: 1.5px solid var(--gold);
-            padding: 12px 5%;
+            padding: 11px 4%;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 14px;
+            gap: 10px;
             z-index: 1200;
+            flex-wrap: wrap;
         }
 
-        .buy-summary {
-            font-size: 0.95rem;
-            font-weight: 700;
+        .buy-summary { font-size: 0.92rem; font-weight: 700; }
+        .buy-summary span { color: var(--gold-bright); font-weight: 900; }
+
+        .bar-btns {
+            display: flex;
+            gap: 8px;
+            align-items: center;
         }
 
-        .buy-summary span {
+        .cart-open-btn {
+            background: rgba(245, 195, 81, 0.14);
             color: var(--gold-bright);
-            font-weight: 900;
+            border: 1.5px solid var(--gold);
+            padding: 10px 16px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 800;
+            cursor: pointer;
         }
 
         .buy-main-btn {
             background: linear-gradient(135deg, var(--gold), #c88e19);
             color: #120814;
             border: none;
-            padding: 11px 26px;
+            padding: 10px 22px;
             border-radius: 12px;
-            font-size: 1rem;
+            font-size: 0.98rem;
             font-weight: 900;
             cursor: pointer;
             box-shadow: 0 4px 18px rgba(245, 195, 81, 0.35);
         }
 
-        /* نوافذ المنبثقات (Modals) */
         .modal-backdrop {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.82);
             backdrop-filter: blur(5px);
             display: none;
             justify-content: center;
@@ -429,9 +403,7 @@
             overflow-y: auto;
         }
 
-        .modal-backdrop.open {
-            display: flex;
-        }
+        .modal-backdrop.open { display: flex; }
 
         .modal-box {
             width: 100%;
@@ -455,13 +427,7 @@
             align-items: center;
         }
 
-        .close-x {
-            background: none;
-            border: none;
-            color: #fff;
-            font-size: 1.5rem;
-            cursor: pointer;
-        }
+        .close-x { background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; }
 
         .selected-list {
             background: rgba(255,255,255,0.03);
@@ -469,7 +435,7 @@
             border-radius: 14px;
             padding: 12px;
             margin-bottom: 14px;
-            max-height: 210px;
+            max-height: 240px;
             overflow-y: auto;
         }
 
@@ -477,14 +443,13 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 7px 0;
+            padding: 8px 0;
             border-bottom: 1px dashed rgba(255,255,255,0.08);
             font-size: 0.9rem;
+            gap: 8px;
         }
 
-        .sel-item:last-child {
-            border-bottom: none;
-        }
+        .sel-item:last-child { border-bottom: none; }
 
         .pay-option {
             border: 1.5px solid var(--gold-dim);
@@ -512,9 +477,7 @@
             line-height: 1.5;
         }
 
-        .form-group {
-            margin-bottom: 12px;
-        }
+        .form-group { margin-bottom: 12px; }
 
         .form-group label {
             display: block;
@@ -535,9 +498,7 @@
             outline: none;
         }
 
-        .form-control:focus {
-            border-color: var(--gold);
-        }
+        .form-control:focus { border-color: var(--gold); }
 
         .btn-gold {
             width: 100%;
@@ -565,7 +526,6 @@
             margin-top: 8px;
         }
 
-        /* لوحة الموظفين السرية */
         .staff-order-card {
             background: rgba(255,255,255,0.04);
             border: 1px solid var(--gold-dim);
@@ -574,64 +534,29 @@
             margin-bottom: 14px;
         }
 
-        .staff-actions {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 8px;
-            margin-top: 10px;
-        }
+        .staff-actions { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 10px; }
 
-        .act-btn {
-            padding: 10px;
-            border-radius: 10px;
-            border: none;
-            font-weight: 800;
-            cursor: pointer;
-            font-size: 0.9rem;
-        }
-
+        .act-btn { padding: 10px; border-radius: 10px; border: none; font-weight: 800; cursor: pointer; font-size: 0.9rem; }
         .act-accept { background: #16a34a; color: #fff; }
         .act-prep { background: var(--gold); color: #120814; }
         .act-done { background: #2563eb; color: #fff; }
 
-        .stars-row {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin: 14px 0;
-            font-size: 2rem;
-        }
+        .stars-row { display: flex; justify-content: center; gap: 10px; margin: 14px 0; font-size: 2rem; }
+        .star-btn { background: none; border: none; cursor: pointer; color: #554861; transition: transform 0.15s, color 0.15s; }
+        .star-btn.active { color: var(--gold); transform: scale(1.15); }
 
-        .star-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: #554861;
-            transition: transform 0.15s, color 0.15s;
-        }
-
-        .star-btn.active {
-            color: var(--gold);
-            transform: scale(1.15);
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
         @media (max-width: 600px) {
-            .app-shell {
-                margin: 10px 8px 92px;
-                padding: 14px;
-            }
-            .menu-grid {
-                grid-template-columns: 1fr;
-            }
+            .app-shell { margin: 10px 8px 108px; padding: 14px; }
+            .menu-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
 
-    <!-- زر سري صغير جداً أعلى يسار -->
     <button class="secret-dot-btn" id="secretBtn" title=""></button>
 
-    <!-- إشعار علوي متحرك -->
     <div class="top-push-banner" id="topBanner">
         <div class="push-icon">✦</div>
         <div class="push-content">
@@ -640,7 +565,6 @@
         </div>
     </div>
 
-    <!-- الغبار الذهبي على الحواف -->
     <canvas id="goldDustCanvas"></canvas>
 
     <div class="app-shell">
@@ -655,7 +579,6 @@
             </div>
         </header>
 
-        <!-- تتبع حالة الطلب الحالي للزبون (يبقى حتى لو خرج أو أعاد فتح الصفحة) -->
         <section class="live-order-tracker" id="orderTracker">
             <div class="tracker-top">
                 <div>
@@ -673,22 +596,40 @@
             </div>
         </section>
 
-        <!-- البحث والأقسام -->
         <div class="filter-bar">
             <input type="text" class="search-input" id="searchInput" placeholder="ابحث عن أي صنف في المنيو..." oninput="renderMenu()">
             <div class="cats-scroll" id="catsScroll"></div>
         </div>
 
-        <!-- المنيو -->
         <main class="menu-grid" id="menuGrid"></main>
     </div>
 
-    <!-- شريط الشراء السفلي -->
+    <!-- الشريط السفلي: زر السلة ليشوف وش اختار + زر شراء -->
     <div class="bottom-buy-bar">
         <div class="buy-summary">
-            الأصناف المختارة: <span id="pickedCount">0</span> | الإجمالي: <span id="pickedTotal">0 ريال</span>
+            المختار: <span id="pickedCount">0</span> | المجموع: <span id="pickedTotal">0 ريال</span>
         </div>
-        <button class="buy-main-btn" onclick="openConfirmModal()">شراء</button>
+        <div class="bar-btns">
+            <button class="cart-open-btn" onclick="openCartModal()">🛒 السلة (<span id="cartBtnBadge">0</span>)</button>
+            <button class="buy-main-btn" onclick="openConfirmModal()">شراء</button>
+        </div>
+    </div>
+
+    <!-- نافذة السلة لعرض ما اختاره الزبون وتعديله -->
+    <div class="modal-backdrop" id="cartModal">
+        <div class="modal-box">
+            <div class="modal-title">
+                <span>🛒 السلة (الأصناف التي اخترتها)</span>
+                <button class="close-x" onclick="closeModal('cartModal')">×</button>
+            </div>
+            <div class="selected-list" id="cartItemsList"></div>
+            <div style="display:flex; justify-content:space-between; font-weight:900; color:var(--gold-bright); margin-bottom:10px;">
+                <span>المجموع الكلي:</span>
+                <span id="cartModalTotal">0 ريال</span>
+            </div>
+            <button class="btn-gold" onclick="proceedFromCartToBuy()">إتمام الشراء</button>
+            <button class="btn-outline" onclick="closeModal('cartModal')">متابعة تصفح المنيو</button>
+        </div>
     </div>
 
     <!-- 1. نافذة تأكيد الشراء -->
@@ -734,7 +675,7 @@
         </div>
     </div>
 
-    <!-- 3. نافذة بيانات التوصيل وصورة الباب/البيت من الألبوم -->
+    <!-- 3. نافذة البيانات وصورة الباب/البيت من الألبوم -->
     <div class="modal-backdrop" id="detailsModal">
         <div class="modal-box">
             <div class="modal-title">
@@ -769,7 +710,7 @@
         </div>
     </div>
 
-    <!-- 4. نافذة جاري استلام الطلب وتحميل -->
+    <!-- 4. جاري استلام الطلب -->
     <div class="modal-backdrop" id="loadingOrderModal">
         <div class="modal-box" style="text-align:center; padding:32px 22px;">
             <div style="width:48px; height:48px; border:4px solid rgba(245,195,81,0.2); border-top-color:var(--gold); border-radius:50%; margin:0 auto 16px; animation: spin 0.9s linear infinite;"></div>
@@ -778,7 +719,7 @@
         </div>
     </div>
 
-    <!-- 5. نافذة التقييم بعد الاستلام -->
+    <!-- 5. التقييم -->
     <div class="modal-backdrop" id="ratingModal">
         <div class="modal-box" style="text-align:center;">
             <div class="modal-title">
@@ -798,7 +739,7 @@
         </div>
     </div>
 
-    <!-- 6. نافذة الكود السري ولوحة الطلبات -->
+    <!-- 6. الكود السري ولوحة الطلبات -->
     <div class="modal-backdrop" id="secretCodeModal">
         <div class="modal-box">
             <div class="modal-title">
@@ -822,14 +763,7 @@
         </div>
     </div>
 
-    <style>
-        @keyframes spin { to { transform: rotate(360deg); } }
-    </style>
-
     <script>
-        /* =========================================================
-           بيانات المنيو الكاملة (بدون أي أرقام جوال أو بيانات حقيقية)
-        ========================================================= */
         const menuSections = [
             {
                 title: "العصيرات الطازجة",
@@ -1075,9 +1009,6 @@
             }
         ];
 
-        /* =========================================================
-           حالة التطبيق والتخزين المحلي (يبقى حتى لو خرج أو أعاد الفتح)
-        ========================================================= */
         const SECRET_CODE = "11133334";
         const STORAGE_ORDERS_KEY = "hala_waghala_orders_v1";
         const STORAGE_ACTIVE_ID_KEY = "hala_waghala_active_order_id_v1";
@@ -1093,19 +1024,10 @@
             catch { return []; }
         }
 
-        function saveOrders(list) {
-            localStorage.setItem(STORAGE_ORDERS_KEY, JSON.stringify(list));
-        }
+        function saveOrders(list) { localStorage.setItem(STORAGE_ORDERS_KEY, JSON.stringify(list)); }
+        function getActiveOrderId() { return localStorage.getItem(STORAGE_ACTIVE_ID_KEY) || ""; }
+        function setActiveOrderId(id) { localStorage.setItem(STORAGE_ACTIVE_ID_KEY, id); }
 
-        function getActiveOrderId() {
-            return localStorage.getItem(STORAGE_ACTIVE_ID_KEY) || "";
-        }
-
-        function setActiveOrderId(id) {
-            localStorage.setItem(STORAGE_ACTIVE_ID_KEY, id);
-        }
-
-        /* إشعار علوي */
         let bannerTimer = null;
         function showTopBanner(title, body) {
             const banner = document.getElementById("topBanner");
@@ -1116,7 +1038,6 @@
             bannerTimer = setTimeout(() => banner.classList.remove("show"), 5500);
         }
 
-        /* رسم المنيو */
         function renderCategories() {
             const bar = document.getElementById("catsScroll");
             const cats = ["الكل", ...menuSections.map(s => s.title)];
@@ -1134,7 +1055,6 @@
         function renderMenu() {
             const grid = document.getElementById("menuGrid");
             const q = document.getElementById("searchInput").value.trim().toLowerCase();
-
             const secs = activeCategory === "الكل" ? menuSections : menuSections.filter(s => s.title === activeCategory);
             let html = "";
 
@@ -1169,9 +1089,7 @@
             grid.innerHTML = html || `<p style="color:var(--text-muted); text-align:center; grid-column:1/-1;">لا يوجد صنف مطابق.</p>`;
         }
 
-        function escapeHtml(str) {
-            return str.replace(/'/g, "\\'");
-        }
+        function escapeHtml(str) { return str.replace(/'/g, "\\'"); }
 
         function addItem(name, label, price) {
             const key = `${name} (${label})`;
@@ -1185,6 +1103,7 @@
             cart[idx].qty += delta;
             if (cart[idx].qty <= 0) cart.splice(idx, 1);
             updateCartBar();
+            renderCartModalList();
             renderConfirmList();
         }
 
@@ -1192,13 +1111,48 @@
             const count = cart.reduce((s, x) => s + x.qty, 0);
             const total = cart.reduce((s, x) => s + (x.price * x.qty), 0);
             document.getElementById("pickedCount").textContent = count;
+            document.getElementById("cartBtnBadge").textContent = count;
             document.getElementById("pickedTotal").textContent = `${total} ريال`;
         }
 
         function openModal(id) { document.getElementById(id).classList.add("open"); }
         function closeModal(id) { document.getElementById(id).classList.remove("open"); }
 
-        /* خطوة 1: شراء -> تأكيد */
+        function openCartModal() {
+            renderCartModalList();
+            openModal("cartModal");
+        }
+
+        function renderCartModalList() {
+            const list = document.getElementById("cartItemsList");
+            const total = cart.reduce((s, x) => s + (x.price * x.qty), 0);
+            document.getElementById("cartModalTotal").textContent = `${total} ريال`;
+
+            if (!cart.length) {
+                list.innerHTML = `<p style="color:var(--text-muted); text-align:center; padding:18px;">السلة فارغة حالياً.. اختر أصنافاً من المنيو لتظهر هنا.</p>`;
+                return;
+            }
+
+            list.innerHTML = cart.map((x, i) => `
+                <div class="sel-item">
+                    <div>
+                        <strong>${x.name}</strong> <span style="color:var(--gold);">(${x.label})</span>
+                        <div style="font-size:0.82rem; color:var(--text-muted);">${x.price} ريال × ${x.qty} = ${x.price * x.qty} ريال</div>
+                    </div>
+                    <div style="display:flex; gap:6px; align-items:center;">
+                        <button type="button" class="pick-btn" onclick="changeCartQty(${i}, -1)">-</button>
+                        <span>${x.qty}</span>
+                        <button type="button" class="pick-btn" onclick="changeCartQty(${i}, 1)">+</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function proceedFromCartToBuy() {
+            closeModal("cartModal");
+            openConfirmModal();
+        }
+
         function openConfirmModal() {
             if (!cart.length) {
                 showTopBanner("تنبيه", "اختر صنفاً واحداً على الأقل من المنيو قبل الضغط على شراء.");
@@ -1233,7 +1187,6 @@
             `).join('');
         }
 
-        /* خطوة 2: طريقة الدفع */
         function goToPaymentStep() {
             if (!cart.length) return;
             closeModal("confirmModal");
@@ -1259,7 +1212,6 @@
             openModal("detailsModal");
         }
 
-        /* معاينة صورة الباب/البيت من الألبوم */
         function previewHousePhoto(e) {
             const file = e.target.files && e.target.files[0];
             if (!file) {
@@ -1277,7 +1229,6 @@
             reader.readAsDataURL(file);
         }
 
-        /* خطوة 3: إرسال الطلب */
         function submitOrder(e) {
             e.preventDefault();
             const phone = document.getElementById("custPhone").value.trim();
@@ -1294,7 +1245,7 @@
                 location,
                 housePhoto: housePhotoDataUrl,
                 notes,
-                status: "pending", // pending -> accepted -> prepared -> delivered
+                status: "pending",
                 staffName: "",
                 rating: null,
                 createdAt: new Date().toLocaleTimeString("ar-SA", { hour: "2-digit", minute: "2-digit" })
@@ -1321,20 +1272,13 @@
             }, 1300);
         }
 
-        /* عرض تتبع الطلب للزبون */
         function renderCustomerTracker() {
             const activeId = getActiveOrderId();
             const tracker = document.getElementById("orderTracker");
-            if (!activeId) {
-                tracker.classList.remove("active");
-                return;
-            }
+            if (!activeId) { tracker.classList.remove("active"); return; }
 
             const order = getOrders().find(o => o.id === activeId);
-            if (!order) {
-                tracker.classList.remove("active");
-                return;
-            }
+            if (!order) { tracker.classList.remove("active"); return; }
 
             tracker.classList.add("active");
             document.getElementById("trackOrderId").textContent = order.id;
@@ -1373,9 +1317,6 @@
             }
         }
 
-        /* =========================================================
-           الزر السري الكود 11133334 ولوحة الطلبات
-        ========================================================= */
         document.getElementById("secretBtn").addEventListener("click", () => {
             document.getElementById("secretCodeInput").value = "";
             openModal("secretCodeModal");
@@ -1451,13 +1392,9 @@
             renderCustomerTracker();
 
             if (newStatus === "accepted") {
-                const msgText = "تم استلام طلبك جاري تحضيره وتوصيله لك";
-                showTopBanner("إشعار الطلب", msgText);
-                triggerBrowserNotification("مذاق هلا وغلا", msgText);
+                showTopBanner("إشعار الطلب", "تم استلام طلبك جاري تحضيره وتوصيله لك");
             } else if (newStatus === "prepared") {
-                const msgText = "تم التحضير الطلب قادم إليك";
-                showTopBanner("إشعار الطلب", msgText);
-                triggerBrowserNotification("مذاق هلا وغلا", msgText);
+                showTopBanner("إشعار الطلب", "تم التحضير الطلب قادم إليك");
             } else if (newStatus === "delivered") {
                 closeModal("staffDashboardModal");
                 ratingValue = 0;
@@ -1467,21 +1404,9 @@
             }
         }
 
-        function triggerBrowserNotification(title, body) {
-            if ("Notification" in window && Notification.permission === "granted") {
-                new Notification(title, { body });
-            }
-        }
-
-        /* التقييم */
-        function setRating(val) {
-            ratingValue = val;
-            updateStarsUI();
-        }
-
+        function setRating(val) { ratingValue = val; updateStarsUI(); }
         function updateStarsUI() {
-            const btns = document.querySelectorAll("#starsRow .star-btn");
-            btns.forEach((b, idx) => b.classList.toggle("active", idx < ratingValue));
+            document.querySelectorAll("#starsRow .star-btn").forEach((b, idx) => b.classList.toggle("active", idx < ratingValue));
         }
 
         function submitRating() {
@@ -1495,4 +1420,81 @@
             if (order) {
                 order.rating = ratingValue;
                 order.ratingComment = document.getElementById("ratingComment").value.trim();
-                save
+                saveOrders(orders);
+            }
+            closeModal("ratingModal");
+            renderCustomerTracker();
+            showTopBanner("بالعافية", "شكراً لتقييمك، نسعد بخدمتك دائماً.");
+        }
+
+        /* الغبار الذهبي على الحواف */
+        const dustCanvas = document.getElementById("goldDustCanvas");
+        const dustCtx = dustCanvas.getContext("2d");
+        let dustParticles = [];
+
+        function resizeDust() {
+            dustCanvas.width = window.innerWidth;
+            dustCanvas.height = window.innerHeight;
+        }
+        window.addEventListener("resize", resizeDust);
+        resizeDust();
+
+        class Dust {
+            constructor() { this.spawn(true); }
+            spawn(randomLife = false) {
+                const edge = Math.random();
+                if (edge < 0.35) {
+                    this.x = dustCanvas.width - (Math.random() * 85);
+                    this.y = Math.random() * dustCanvas.height;
+                } else if (edge < 0.70) {
+                    this.x = Math.random() * 85;
+                    this.y = Math.random() * dustCanvas.height;
+                } else if (edge < 0.85) {
+                    this.x = Math.random() * dustCanvas.width;
+                    this.y = Math.random() * 85;
+                } else {
+                    this.x = Math.random() * dustCanvas.width;
+                    this.y = dustCanvas.height - (Math.random() * 85);
+                }
+                this.r = Math.random() * 2 + 0.6;
+                this.vx = (Math.random() - 0.5) * 0.4;
+                this.vy = -Math.random() * 0.45 - 0.15;
+                this.maxLife = Math.random() * 140 + 80;
+                this.life = randomLife ? Math.floor(Math.random() * this.maxLife) : 0;
+                this.peak = Math.random() * 0.75 + 0.2;
+            }
+            step() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.life++;
+                if (this.life >= this.maxLife) this.spawn(false);
+            }
+            draw() {
+                const alpha = Math.sin((this.life / this.maxLife) * Math.PI) * this.peak;
+                dustCtx.save();
+                dustCtx.beginPath();
+                dustCtx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+                dustCtx.fillStyle = `rgba(255, 226, 138, ${alpha})`;
+                dustCtx.shadowBlur = 7;
+                dustCtx.shadowColor = `rgba(245, 195, 81, ${alpha})`;
+                dustCtx.fill();
+                dustCtx.restore();
+            }
+        }
+
+        for (let i = 0; i < 90; i++) dustParticles.push(new Dust());
+
+        function loopDust() {
+            dustCtx.clearRect(0, 0, dustCanvas.width, dustCanvas.height);
+            dustParticles.forEach(p => { p.step(); p.draw(); });
+            requestAnimationFrame(loopDust);
+        }
+
+        renderCategories();
+        renderMenu();
+        updateCartBar();
+        renderCustomerTracker();
+        loopDust();
+    </script>
+</body>
+</html>
