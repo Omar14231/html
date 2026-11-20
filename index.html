@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src data:; connect-src https://ajvqhpccizwdzzidyntx.supabase.co; base-uri 'none'; object-src 'none'; form-action 'none'">
 <title>مذاق هلا وغلا | المنيو والسلة</title>
 <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
 <style>
@@ -92,6 +93,17 @@ body{background:radial-gradient(circle at 50% 0%,#2a0d26 0%,var(--bg-dark) 70%);
 .b-accept{background:#16a34a}.b-prep{background:#d99a14;color:#130916}.b-done{background:#2563eb}
 .s-done{margin-top:10px;text-align:center;color:#7be39b;font-weight:800}
 @media(max-width:600px){.app-shell{margin:10px 8px 108px;padding:14px}.menu-grid{grid-template-columns:1fr}}
+.modal-backdrop.top{z-index:7000}
+.loc-status{font-size:.85rem;margin-top:6px;color:var(--text-muted)}
+.loc-status.ok{color:#7be39b;font-weight:800}.loc-status.bad{color:#ff8a8a;font-weight:800}
+.ntfy-box{margin-top:14px;padding:12px;border-radius:12px;border:1px dashed var(--gold-dim);font-size:.85rem;line-height:1.8;color:var(--text-muted)}
+.ntfy-box code{background:#0e0812;padding:2px 8px;border-radius:6px;color:var(--gold-bright);direction:ltr;display:inline-block;word-break:break-all;user-select:all}
+.ntfy-box a,.lnk{color:var(--gold-bright);font-weight:800}
+.del-btn{background:#7a1630;color:#fff;border:1px solid #ff7b9c;padding:8px 12px;border-radius:10px;font-weight:800;cursor:pointer;font-size:.82rem}
+.s-actions{display:flex;gap:8px;margin-top:10px}
+.s-actions .del-btn{flex:0 0 auto}
+.s-actions .s-main-btn{margin-top:0;flex:1}
+.hint{font-size:.78rem;color:var(--text-muted);margin-top:4px}
 </style>
 </head>
 <body>
@@ -131,6 +143,7 @@ body{background:radial-gradient(circle at 50% 0%,#2a0d26 0%,var(--bg-dark) 70%);
       <div class="step-box" id="step3">3. تم التحضير - الطلب قادم إليك</div>
       <div class="step-box" id="step4">4. تم الاستلام</div>
     </div>
+    <div class="ntfy-box" id="ntfyBox">📲 تبي إشعارات حتى لو سكّرت الموقع؟ ثبّت تطبيق <b>ntfy</b> واشترك باسم الموضوع:<br><code id="ntfyTopic"></code><br><a id="ntfyLink" target="_blank" rel="noopener noreferrer">فتح في ntfy</a></div>
     <button class="btn-gold" id="rateNowBtn" style="display:none" onclick="openRating()">⭐ قيّم</button>
     <button class="btn-outline" id="newOrderBtn" style="display:none" onclick="clearActiveOrder()">طلب جديد</button>
   </section>
@@ -180,15 +193,21 @@ body{background:radial-gradient(circle at 50% 0%,#2a0d26 0%,var(--bg-dark) 70%);
 
 <div class="modal-backdrop" id="detailsModal"><div class="modal-box">
   <div class="modal-title"><span>بيانات التوصيل (<span id="chosenPayLabel"></span>)</span><button class="close-x" onclick="closeModal('detailsModal')">×</button></div>
-  <form id="orderForm" onsubmit="submitOrder(event)">
-    <div class="form-group"><label>اسمك *</label><input type="text" class="form-control" id="custName" required placeholder="اكتب اسمك"></div>
-    <div class="form-group"><label>رقم الهاتف *</label><input type="tel" class="form-control" id="custPhone" required placeholder="05xxxxxxxx"></div>
-    <div class="form-group"><label>الموقع / الحي *</label><input type="text" class="form-control" id="custLocation" required placeholder="اكتب الحي والشارع أو رابط الموقع"></div>
+  <form id="orderForm" onsubmit="submitOrder(event)" autocomplete="off">
+    <div class="form-group"><label>اسمك *</label><input type="text" class="form-control" id="custName" required minlength="2" maxlength="40" placeholder="اكتب اسمك"></div>
+    <div class="form-group"><label>رقم الجوال (سعودي) *</label><input type="tel" class="form-control" id="custPhone" required maxlength="16" inputmode="tel" placeholder="05xxxxxxxx" style="direction:ltr;text-align:right">
+      <div class="hint">يُقبل 05xxxxxxxx أو +9665xxxxxxxx</div></div>
+    <div class="form-group"><label>موقعك (الدمام فقط) *</label>
+      <button type="button" class="btn-gold" style="margin-top:0" onclick="useGPS()">📍 تحديد موقعي</button>
+      <input type="url" class="form-control" id="mapsLinkInput" style="margin-top:8px;direction:ltr" placeholder="أو الصق رابطاً كاملاً من خرائط قوقل" oninput="useMapsLink()">
+      <div class="loc-status" id="locStatus">لم يتم تحديد الموقع بعد</div>
+    </div>
+    <div class="form-group"><label>الحي والشارع / وصف المكان *</label><input type="text" class="form-control" id="custLocation" required minlength="3" maxlength="80" placeholder="مثال: حي الشاطئ، شارع ..."></div>
     <div class="form-group"><label>صورة الباب أو البيت (من الألبوم)</label>
       <input type="file" class="form-control" id="housePhotoInput" accept="image/*" onchange="previewHousePhoto(event)">
       <img id="housePreview" alt="" style="display:none;width:100%;max-height:170px;object-fit:cover;border-radius:12px;margin-top:8px;border:1px solid var(--gold-dim)">
     </div>
-    <div class="form-group"><label>تفاصيل إضافية (اختياري)</label><textarea class="form-control" id="custNotes" rows="2" placeholder="أي ملاحظات..."></textarea></div>
+    <div class="form-group"><label>تفاصيل إضافية (اختياري)</label><textarea class="form-control" id="custNotes" rows="2" maxlength="200" placeholder="أي ملاحظات..."></textarea></div>
     <button type="submit" class="btn-gold" id="sendBtn">إرسال</button>
   </form>
 </div></div>
@@ -214,19 +233,41 @@ body{background:radial-gradient(circle at 50% 0%,#2a0d26 0%,var(--bg-dark) 70%);
 </div></div>
 
 <div class="modal-backdrop" id="secretCodeModal"><div class="modal-box">
-  <div class="modal-title"><span>دخول الموظفين</span><button class="close-x" onclick="closeModal('secretCodeModal')">×</button></div>
-  <div class="form-group"><input type="password" inputmode="numeric" class="form-control" id="secretCodeInput" placeholder="اكتب الكود السري"></div>
+  <div class="modal-title"><span>🔐 دخول الموظفين</span><button class="close-x" onclick="closeModal('secretCodeModal')">×</button></div>
+  <div class="form-group"><input type="password" class="form-control" id="secretCodeInput" placeholder="الرقم السري للموظفين" autocomplete="off"></div>
   <button class="btn-gold" onclick="verifySecretCode()">دخول</button>
+  <div class="hint" style="text-align:center;margin-top:8px">بعد الدخول يبقى الجهاز مسجّلاً 30 يوماً.</div>
 </div></div>
 
-<!-- صفحة الموظفين -->
+<div class="modal-backdrop top" id="deleteModal"><div class="modal-box">
+  <div class="modal-title"><span id="delTitle">حذف</span><button class="close-x" onclick="closeModal('deleteModal')">×</button></div>
+  <p style="color:#ffb3c4;font-weight:700;margin-bottom:10px">⚠️ الحذف نهائي ولا يمكن التراجع. اكتب الرقم السري للتأكيد.</p>
+  <div class="form-group"><input type="password" class="form-control" id="delPw" placeholder="الرقم السري للموظفين" autocomplete="off"></div>
+  <button class="btn-gold" style="background:#b3153f;color:#fff" onclick="confirmDelete()">تأكيد الحذف</button>
+  <button class="btn-outline" onclick="closeModal('deleteModal')">إلغاء</button>
+</div></div>
+
+<div class="modal-backdrop top" id="ntfyModal"><div class="modal-box">
+  <div class="modal-title"><span>📲 إشعارات خارج الموقع</span><button class="close-x" onclick="closeModal('ntfyModal')">×</button></div>
+  <div class="ntfy-box" style="margin-top:0;line-height:2">
+    1) ثبّت تطبيق <b>ntfy</b> من متجر جوجل بلاي أو آب ستور.<br>
+    2) افتحه، اضغط <b>+</b>، واكتب اسم الموضوع التالي بالضبط:<br>
+    <code id="staffTopicTxt"></code><br>
+    3) اسمح بالإشعارات. يوصلك تنبيه بكل طلب جديد حتى لو الموقع مقفول.<br>
+    <a id="staffTopicLink" target="_blank" rel="noopener noreferrer">فتح في ntfy</a>
+    <div class="hint">لا تشارك اسم الموضوع إلا مع الموظفين.</div>
+  </div>
+</div></div>
+
 <div id="staffPage">
   <div class="staff-head">
     <h2>📋 لوحة الموظفين — الطلبات المباشرة</h2>
     <div class="staff-tools">
-      <input type="text" id="staffNameInput" placeholder="اسمك (الموظف)">
+      <input type="text" id="staffNameInput" placeholder="اسمك (الموظف)" maxlength="40" oninput="localStorage.setItem('hw_staff_name',this.value.trim())">
       <button class="tool-btn" id="soundBtn" onclick="toggleSound()">🔔 الصوت: يعمل</button>
-      <button class="tool-btn red" onclick="closeStaff()">خروج</button>
+      <button class="tool-btn" onclick="openNtfyInfo()">📲 إشعارات خارجية</button>
+      <button class="tool-btn" onclick="closeStaff()">إغلاق</button>
+      <button class="tool-btn red" onclick="staffLogout()">تسجيل خروج</button>
     </div>
   </div>
   <div class="staff-tabs" id="staffTabs"></div>
@@ -234,45 +275,19 @@ body{background:radial-gradient(circle at 50% 0%,#2a0d26 0%,var(--bg-dark) 70%);
 </div>
 
 <script>
-/* ============ الربط العالمي (Supabase) ============ */
+/* ============ الربط مع Supabase (كل الحماية داخل السيرفر) ============ */
 const SUPA_URL="https://ajvqhpccizwdzzidyntx.supabase.co";
 const SUPA_KEY="sb_publishable_Xla3LF-8cvb-n5nTI1iDhw_a7p3Wbl4";
-const SECRET_CODE="11133334";
-const POLL_MS=3000;
-const TBL=SUPA_URL+"/rest/v1/orders";
-const H={"apikey":SUPA_KEY,"Content-Type":"application/json"};
-async function chk(r,label){
-  if(r.ok)return;
-  let t="";try{t=await r.text();}catch(e){}
-  throw new Error(label+" ["+r.status+"] "+t.slice(0,220));
+const POLL_MS=3500;
+async function rpc(fn,args){
+  const r=await fetch(SUPA_URL+"/rest/v1/rpc/"+fn,{method:"POST",headers:{"apikey":SUPA_KEY,"Content-Type":"application/json"},body:JSON.stringify(args||{})});
+  const t=await r.text();let d=null;try{d=t?JSON.parse(t):null;}catch(e){}
+  if(!r.ok){const e=new Error((d&&d.message)||t||("HTTP "+r.status));e.status=r.status;throw e;}
+  return d;
 }
-
-const fromRow=r=>r&&({id:r.id,items:r.items||[],total:r.total,payment:r.payment,customerName:r.customer_name,phone:r.phone,
-  location:r.location,housePhoto:r.house_photo||"",notes:r.notes||"",status:r.status,staffName:r.staff_name||"",
-  rating:r.rating||0,ratingComment:r.rating_comment||"",createdAt:Date.parse(r.created_at)});
-
-const store={
-  async list(){
-    const r=await fetch(TBL+"?select=*&order=created_at.desc&limit=200",{headers:H,cache:"no-store"});
-    await chk(r,"list");return (await r.json()).map(fromRow);
-  },
-  async get(id){
-    const r=await fetch(TBL+"?select=*&id=eq."+encodeURIComponent(id),{headers:H,cache:"no-store"});
-    await chk(r,"get");const d=await r.json();return d.length?fromRow(d[0]):null;
-  },
-  async insert(o){
-    const body={items:o.items,total:o.total,payment:o.payment,customer_name:o.customerName,phone:o.phone,
-      location:o.location,house_photo:o.housePhoto,notes:o.notes};
-    const r=await fetch(TBL,{method:"POST",headers:{...H,"Prefer":"return=representation"},body:JSON.stringify(body)});
-    await chk(r,"insert");return fromRow((await r.json())[0]);
-  },
-  async patch(id,obj){
-    const map={status:"status",staffName:"staff_name",rating:"rating",ratingComment:"rating_comment"};
-    const body={};for(const k in obj)body[map[k]]=obj[k];
-    const r=await fetch(TBL+"?id=eq."+encodeURIComponent(id),{method:"PATCH",headers:H,body:JSON.stringify(body)});
-    await chk(r,"patch");
-  }
-};
+/* حدود مدينة الدمام (تقريبية — عدّلها إن لزم، ولازم تطابق ملف SQL) */
+const DAM={latMin:26.30,latMax:26.55,lngMin:49.95,lngMax:50.20};
+const inDammam=(la,ln)=>la>=DAM.latMin&&la<=DAM.latMax&&ln>=DAM.lngMin&&ln<=DAM.lngMax;
 
 /* ================= المنيو ================= */
 function P(tok,def){
@@ -427,7 +442,7 @@ function goToPaymentStep(){
 function selectPayment(m){selectedPayment=m;optNetwork.classList.toggle("selected",m==="شبكة");optCash.classList.toggle("selected",m==="كاش");}
 function goToDetailsForm(){
   if(!selectedPayment){showTopBanner("اختر طريقة الدفع","يرجى اختيار شبكة أو كاش.");return;}
-  closeModal("paymentModal");chosenPayLabel.textContent=selectedPayment;
+  closeModal("paymentModal");chosenPayLabel.textContent=selectedPayment;resetLoc();
   openModal("detailsModal");
 }
 function previewHousePhoto(e){
@@ -448,52 +463,91 @@ function previewHousePhoto(e){
   rd.readAsDataURL(f);
 }
 
-/* ================= إرسال الطلب ================= */
-async function submitOrder(e){
-  e.preventDefault();
-  askNotifyPermission();unlockAudio();
-  closeModal("detailsModal");openModal("loadingOrderModal");
-  try{
-    const saved=await store.insert({
-      items:cart.map(x=>({name:x.name,label:x.label,price:x.price,qty:x.qty})),total:cartTotal(),payment:selectedPayment,
-      customerName:custName.value.trim(),phone:custPhone.value.trim(),location:custLocation.value.trim(),
-      housePhoto:housePhotoDataUrl,notes:custNotes.value.trim()
-    });
-    activeOrderId=saved.id;lastSeenStatus="pending";ratingPrompted=false;
-    cart=[];housePhotoDataUrl="";orderForm.reset();housePreview.style.display="none";updateCartBar();
-    closeModal("loadingOrderModal");
-    await refreshTracker();
-    showTopBanner("تم إرسال طلبك ✅","رقم طلبك #"+saved.id+" بانتظار قبول الموظف.");
-  }catch(err){
-    closeModal("loadingOrderModal");openModal("detailsModal");
-    console.error(err);
-    showTopBanner("تعذّر الإرسال — السبب:",String(err&&err.message||err),20000);
-  }
+/* ================= الزبون ================= */
+let activeOrderId="",activeToken="",lastSeenStatus="",ratingPrompted=false,currentTrackedOrder=null,loc=null;
+const randHex=n=>{const a=new Uint8Array(n);crypto.getRandomValues(a);return Array.from(a,b=>b.toString(16).padStart(2,"0")).join("");};
+const SA_MOBILE=/^05[03456789]\d{7}$/;
+function normPhone(v){
+  let p=String(v).replace(/[\s\-()]/g,"").replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d));
+  if(p.startsWith("+966"))p="0"+p.slice(4);else if(p.startsWith("00966"))p="0"+p.slice(5);else if(p.startsWith("966"))p="0"+p.slice(3);else if(/^5\d{8}$/.test(p))p="0"+p;
+  return p;
+}
+function setLocMsg(t,c){locStatus.textContent=t;locStatus.className="loc-status "+(c||"");}
+function resetLoc(){loc=null;mapsLinkInput.value="";setLocMsg("لم يتم تحديد الموقع بعد");}
+function setLoc(la,ln){
+  la=Math.round(la*1e6)/1e6;ln=Math.round(ln*1e6)/1e6;
+  if(!inDammam(la,ln)){loc=null;setLocMsg("❌ الموقع خارج الدمام. الخدمة داخل الدمام فقط.","bad");return;}
+  loc={lat:la,lng:ln};setLocMsg("✅ تم تحديد موقعك داخل الدمام","ok");
+}
+function useGPS(){
+  if(!navigator.geolocation){setLocMsg("المتصفح لا يدعم تحديد الموقع. الصق رابطاً كاملاً من خرائط قوقل.","bad");return;}
+  setLocMsg("جاري تحديد موقعك...");
+  navigator.geolocation.getCurrentPosition(p=>setLoc(p.coords.latitude,p.coords.longitude),
+    ()=>setLocMsg("تعذّر تحديد الموقع. فعّل صلاحية الموقع للمتصفح أو الصق رابطاً من خرائط قوقل.","bad"),
+    {enableHighAccuracy:true,timeout:15000,maximumAge:0});
+}
+/* قبول روابط خرائط قوقل الكاملة فقط، واستخراج الإحداثيات منها (الرابط نفسه لا يُحفظ) */
+function parseMapsLink(txt){
+  let u;try{u=new URL(String(txt).trim());}catch(e){return{error:"الرابط غير صالح"};}
+  const h=u.hostname.toLowerCase();
+  if(h==="maps.app.goo.gl"||h==="goo.gl")return{error:"الرابط المختصر لا يمكن التحقق منه. استخدم زر تحديد موقعي أو رابطاً كاملاً."};
+  const okHost=["www.google.com","google.com","maps.google.com","www.google.com.sa","google.com.sa"].includes(h);
+  if(u.protocol!=="https:"||!okHost||u.username||u.password||u.port||!(u.pathname.startsWith("/maps")||h==="maps.google.com"))return{error:"الرابط ليس من خرائط قوقل الرسمية"};
+  const s=decodeURIComponent(u.href);
+  const m=s.match(/@(-?\d{1,3}\.\d+),(-?\d{1,3}\.\d+)/)||s.match(/[?&](?:q|ll|query|destination)=(-?\d{1,3}\.\d+)[, ]\s*(-?\d{1,3}\.\d+)/i)||s.match(/!3d(-?\d{1,3}\.\d+)!4d(-?\d{1,3}\.\d+)/);
+  if(!m)return{error:"ما وجدنا إحداثيات في الرابط. استخدم زر تحديد موقعي."};
+  return{lat:+m[1],lng:+m[2]};
+}
+function useMapsLink(){
+  const v=mapsLinkInput.value.trim();if(!v){loc=null;setLocMsg("لم يتم تحديد الموقع بعد");return;}
+  const r=parseMapsLink(v);
+  if(r.error){loc=null;setLocMsg("❌ "+r.error,"bad");return;}
+  setLoc(r.lat,r.lng);
 }
 
-/* ================= تتبع الزبون ================= */
-let activeOrderId="",lastSeenStatus="",ratingPrompted=false,currentTrackedOrder=null;
+async function submitOrder(e){
+  e.preventDefault();
+  const phone=normPhone(custPhone.value);
+  if(!SA_MOBILE.test(phone)){showTopBanner("رقم الجوال","اكتب رقم جوال سعودي صحيح مثل 05xxxxxxxx",7000);return;}
+  if(!loc){showTopBanner("الموقع","حدّد موقعك داخل الدمام أولاً.",7000);return;}
+  askNotifyPermission();unlockAudio();sendBtn.disabled=true;
+  closeModal("detailsModal");openModal("loadingOrderModal");
+  try{
+    const token=randHex(16);
+    const id=await rpc("create_order",{
+      p_items:cart.map(x=>({name:x.name,label:x.label,price:x.price,qty:x.qty})),p_payment:selectedPayment,
+      p_name:custName.value.trim(),p_phone:phone,p_lat:loc.lat,p_lng:loc.lng,p_area:custLocation.value.trim(),
+      p_notes:custNotes.value.trim(),p_photo:housePhotoDataUrl,p_token:token});
+    activeOrderId=id;activeToken=token;lastSeenStatus="pending";ratingPrompted=false;
+    cart=[];housePhotoDataUrl="";orderForm.reset();housePreview.style.display="none";resetLoc();updateCartBar();
+    ntfyTopic.textContent="hwc-"+token;ntfyLink.href="https://ntfy.sh/hwc-"+token;
+    closeModal("loadingOrderModal");
+    await refreshTracker();
+    showTopBanner("تم إرسال طلبك ✅","رقم طلبك #"+id+" بانتظار قبول الموظف.");
+  }catch(err){
+    closeModal("loadingOrderModal");openModal("detailsModal");
+    showTopBanner("تعذّر الإرسال",String(err.message||err),12000);
+  }finally{sendBtn.disabled=false;}
+}
+
 async function refreshTracker(){
-  const id=activeOrderId;
   const tr=document.getElementById("orderTracker");
-  if(!id){tr.classList.remove("active");return;}
-  let o;try{o=await store.get(id);}catch{return;}
+  if(!activeOrderId){tr.classList.remove("active");return;}
+  let o;try{o=await rpc("get_order_status",{p_id:activeOrderId,p_token:activeToken});}catch(e){return;}
   if(!o){tr.classList.remove("active");return;}
-  currentTrackedOrder=o;
-  tr.classList.add("active");
+  currentTrackedOrder=o;tr.classList.add("active");
   trackOrderId.textContent=o.id;
   trackSummary.textContent=`${(o.items||[]).map(i=>`${i.name} (${i.qty})`).join("، ")} • الإجمالي: ${o.total} ريال • الدفع: ${o.payment}`;
   ["step1","step2","step3","step4"].forEach(s=>document.getElementById(s).classList.remove("done"));
   step1.classList.add("done");
   const st=o.status;
   if(st==="pending"){trackStatusBadge.textContent="تم الإرسال";trackMainMessage.textContent="طلبك مسجل، بانتظار قبول الموظف.";}
-  else if(st==="accepted"){step2.classList.add("done");trackStatusBadge.textContent="جاري التحضير والتوصيل";trackMainMessage.textContent=`تم استلام طلبك جاري تحضيره وتوصيله لك${o.staffName?` (الموظف: ${o.staffName})`:""}.`;}
+  else if(st==="accepted"){step2.classList.add("done");trackStatusBadge.textContent="جاري التحضير والتوصيل";trackMainMessage.textContent="تم استلام طلبك جاري تحضيره وتوصيله لك"+(o.staff_name?` (الموظف: ${o.staff_name})`:"")+".";}
   else if(st==="prepared"){step2.classList.add("done");step3.classList.add("done");trackStatusBadge.textContent="الطلب قادم إليك";trackMainMessage.textContent="تم تحضير طلبك، الطلب قادم إليك.";}
   else if(st==="delivered"){step2.classList.add("done");step3.classList.add("done");step4.classList.add("done");trackStatusBadge.textContent="تم الاستلام";
     trackMainMessage.textContent=o.rating?`بالعافية! شكراً لتقييمك (${o.rating} نجوم).`:"تم استلام طلبك، بالعافية! ⭐";}
   rateNowBtn.style.display=(st==="delivered"&&!o.rating)?"block":"none";
   newOrderBtn.style.display=st==="delivered"?"block":"none";
-
   if(st!==lastSeenStatus){
     lastSeenStatus=st;
     if(st==="accepted"){playSoftSound();showTopBanner("إشعار الطلب","تم استلام طلبك جاري تحضيره وتوصيله لك");sysNotify("مذاق هلا وغلا","تم استلام طلبك جاري تحضيره وتوصيله لك");}
@@ -501,82 +555,127 @@ async function refreshTracker(){
     if(st==="delivered"){playSoftSound();sysNotify("مذاق هلا وغلا","بالعافية! قيّم الخدمة");if(!o.rating&&!ratingPrompted){ratingPrompted=true;openRating();}}
   }
 }
-function clearActiveOrder(){activeOrderId="";currentTrackedOrder=null;lastSeenStatus="";refreshTracker();}
-function openRating(){
-  rateStaffName.textContent=(currentTrackedOrder&&currentTrackedOrder.staffName)||"الموظف";
-  ratingValue=0;updateStarsUI();ratingComment.value="";openModal("ratingModal");
-}
+function clearActiveOrder(){activeOrderId="";activeToken="";currentTrackedOrder=null;lastSeenStatus="";refreshTracker();}
+function openRating(){rateStaffName.textContent=(currentTrackedOrder&&currentTrackedOrder.staff_name)||"الموظف";ratingValue=0;updateStarsUI();ratingComment.value="";openModal("ratingModal");}
 function setRating(v){ratingValue=v;updateStarsUI();}
 function updateStarsUI(){document.querySelectorAll("#starsRow .star-btn").forEach((b,i)=>b.classList.toggle("active",i<ratingValue));}
 async function submitRating(){
   if(!ratingValue){showTopBanner("اختر التقييم","اختر عدد النجوم أولاً.");return;}
-  const id=activeOrderId;if(!id)return;
-  try{await store.patch(id,{rating:ratingValue,ratingComment:ratingComment.value.trim()});}catch{showTopBanner("تعذّر الإرسال","حاول مرة ثانية.");return;}
+  try{await rpc("rate_order",{p_id:activeOrderId,p_token:activeToken,p_rating:ratingValue,p_comment:ratingComment.value.trim()});}
+  catch(e){showTopBanner("تعذّر الإرسال",e.message,8000);return;}
   closeModal("ratingModal");refreshTracker();showTopBanner("بالعافية","شكراً لتقييمك، نسعد بخدمتك دائماً.");
 }
 setInterval(()=>{if(activeOrderId)refreshTracker();},POLL_MS);
 
-/* ================= لوحة الموظفين ================= */
-let staffOpen=false,staffTab="active",knownIds=null,staffOrders=[],staffTimer=null;
-secretBtn.addEventListener("click",()=>{secretCodeInput.value="";openModal("secretCodeModal");setTimeout(()=>secretCodeInput.focus(),50);});
+/* ================= الموظفون ================= */
+let staffToken=localStorage.getItem("hw_staff_token")||"",staffTopic=localStorage.getItem("hw_staff_topic")||"";
+let staffOpen=false,staffTab="active",knownIds=null,staffOrders=[],staffTimer=null,pendingDel=null;
+secretBtn.addEventListener("click",()=>{
+  if(staffToken){enterStaff();return;}
+  secretCodeInput.value="";openModal("secretCodeModal");setTimeout(()=>secretCodeInput.focus(),50);
+});
 secretCodeInput.addEventListener("keydown",e=>{if(e.key==="Enter")verifySecretCode();});
-function verifySecretCode(){
-  if(secretCodeInput.value.trim()!==SECRET_CODE){showTopBanner("تنبيه","الكود غير صحيح.");return;}
-  closeModal("secretCodeModal");unlockAudio();askNotifyPermission();
+delPw.addEventListener("keydown",e=>{if(e.key==="Enter")confirmDelete();});
+async function verifySecretCode(){
+  const pw=secretCodeInput.value;if(!pw)return;
+  try{
+    const r=await rpc("staff_login",{p_password:pw});
+    if(!r.ok){showTopBanner("تنبيه",r.error,9000);return;}
+    staffToken=r.token;staffTopic=r.topic||"";
+    localStorage.setItem("hw_staff_token",staffToken);localStorage.setItem("hw_staff_topic",staffTopic);
+    secretCodeInput.value="";closeModal("secretCodeModal");enterStaff();
+  }catch(e){showTopBanner("تعذّر الدخول",e.message,9000);}
+}
+function enterStaff(){
+  unlockAudio();askNotifyPermission();
+  staffNameInput.value=localStorage.getItem("hw_staff_name")||"";
   staffPage.classList.add("open");staffOpen=true;knownIds=null;
   pollStaff();clearInterval(staffTimer);staffTimer=setInterval(pollStaff,POLL_MS);
 }
 function closeStaff(){staffPage.classList.remove("open");staffOpen=false;clearInterval(staffTimer);}
+async function staffLogout(){
+  try{await rpc("staff_logout",{p_token:staffToken});}catch(e){}
+  staffLocalLogout();
+}
+function staffLocalLogout(){
+  staffToken="";staffTopic="";localStorage.removeItem("hw_staff_token");localStorage.removeItem("hw_staff_topic");closeStaff();
+}
 function toggleSound(){soundOn=!soundOn;soundBtn.textContent=soundOn?"🔔 الصوت: يعمل":"🔕 الصوت: متوقف";if(soundOn)playNewOrderSound();}
+function openNtfyInfo(){
+  staffTopicTxt.textContent=staffTopic||"(سجّل خروج ثم ادخل من جديد لعرض الاسم)";
+  staffTopicLink.href=staffTopic?"https://ntfy.sh/"+encodeURIComponent(staffTopic):"#";
+  openModal("ntfyModal");
+}
 async function pollStaff(){
   if(!staffOpen)return;
-  try{staffOrders=(await store.list()).sort((a,b)=>b.createdAt-a.createdAt);}catch{return;}
+  try{staffOrders=await rpc("staff_list_orders",{p_token:staffToken})||[];}
+  catch(e){if(/SESSION/.test(e.message)){showTopBanner("انتهت الجلسة","سجّل دخولك من جديد.",8000);staffLocalLogout();}return;}
   const ids=new Set(staffOrders.map(o=>o.id));
   if(knownIds){
     const fresh=staffOrders.filter(o=>!knownIds.has(o.id)&&o.status==="pending");
-    if(fresh.length){playNewOrderSound();showTopBanner("🔔 طلب جديد!","طلب #"+fresh[0].id+" من "+(fresh[0].customerName||""));sysNotify("طلب جديد #"+fresh[0].id,(fresh[0].customerName||"")+" — "+fresh[0].total+" ريال");}
+    if(fresh.length){playNewOrderSound();showTopBanner("🔔 طلب جديد!","طلب #"+fresh[0].id+" من "+fresh[0].customer_name,9000);sysNotify("طلب جديد #"+fresh[0].id,fresh[0].customer_name+" — "+fresh[0].total+" ريال");}
   }
   knownIds=ids;renderStaff();
 }
 function setStaffTab(t){staffTab=t;renderStaff();}
 const STATE_TXT={pending:"جديد",accepted:"جاري التحضير",prepared:"قادم للزبون",delivered:"مكتمل"};
+function mapsUrl(o){return `https://www.google.com/maps?q=${Number(o.lat)},${Number(o.lng)}`;}
 function renderStaff(){
   const cnt=s=>staffOrders.filter(o=>s.includes(o.status)).length;
   const tabs=[["active","النشطة",cnt(["pending","accepted","prepared"])],["pending","جديدة",cnt(["pending"])],["delivered","المكتملة",cnt(["delivered"])]];
-  staffTabs.innerHTML=tabs.map(([k,l,c])=>`<button class="cat-btn ${staffTab===k?'active':''}" onclick="setStaffTab('${k}')">${l} (${c})</button>`).join("");
+  const delAll=(staffTab==="active"||staffTab==="delivered")?`<button class="del-btn" style="margin-inline-start:auto" onclick="askDelete('${staffTab}')">🗑 حذف الكل</button>`:"";
+  staffTabs.innerHTML=tabs.map(([k,l,c])=>`<button class="cat-btn ${staffTab===k?'active':''}" onclick="setStaffTab('${k}')">${l} (${c})</button>`).join("")+delAll;
   const list=staffOrders.filter(o=>staffTab==="active"?o.status!=="delivered":o.status===staffTab);
   if(!list.length){staffBody.innerHTML=`<p style="color:var(--text-muted);text-align:center;padding:40px;grid-column:1/-1">لا توجد طلبات هنا.</p>`;return;}
   staffBody.innerHTML=list.map(o=>{
-    const t=new Date(o.createdAt).toLocaleTimeString("ar-SA",{hour:"2-digit",minute:"2-digit"});
+    const id=esc(o.id);
+    const t=new Date(o.created_at).toLocaleTimeString("ar-SA",{hour:"2-digit",minute:"2-digit"});
     let btn="";
-    if(o.status==="pending")btn=`<button class="s-main-btn b-accept" onclick="staffAct('${esc(o.id)}','accepted')">✅ قبول الطلب</button>`;
-    else if(o.status==="accepted")btn=`<button class="s-main-btn b-prep" onclick="staffAct('${esc(o.id)}','prepared')">🍳 تم تحضير طلبك</button>`;
-    else if(o.status==="prepared")btn=`<button class="s-main-btn b-done" onclick="staffAct('${esc(o.id)}','delivered')">📦 تم استلام الطلب</button>`;
-    else btn=`<div class="s-done">✔ مكتمل ${o.rating?`— التقييم: ${"★".repeat(o.rating)}${o.ratingComment?` «${esc(o.ratingComment)}»`:""}`:"— بانتظار تقييم الزبون"}</div>`;
+    if(o.status==="pending")btn=`<button class="s-main-btn b-accept" onclick="staffAct('${id}','accepted')">✅ قبول الطلب</button>`;
+    else if(o.status==="accepted")btn=`<button class="s-main-btn b-prep" onclick="staffAct('${id}','prepared')">🍳 تم تحضير طلبك</button>`;
+    else if(o.status==="prepared")btn=`<button class="s-main-btn b-done" onclick="staffAct('${id}','delivered')">📦 تم استلام الطلب</button>`;
+    else btn=`<div class="s-done" style="flex:1;margin:0">✔ مكتمل ${o.rating?`— ${"★".repeat(o.rating)}${o.rating_comment?` «${esc(o.rating_comment)}»`:""}`:"— بانتظار التقييم"}</div>`;
     return `<div class="s-card ${o.status==="pending"?"new":""}">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <span class="s-num">#${esc(o.id)}</span><span class="s-state">${STATE_TXT[o.status]||""}</span></div>
-      <div style="font-size:.8rem;color:var(--text-muted);margin-bottom:8px">${t}${o.staffName?` • الموظف: ${esc(o.staffName)}`:""}</div>
-      <div style="font-size:.92rem;margin-bottom:8px">${(o.items||[]).map(i=>`• ${esc(i.name)} (${esc(i.label)}) × ${i.qty}`).join("<br>")}</div>
-      <div style="font-size:.86rem;color:var(--text-muted);line-height:1.7">
-        👤 <strong style="color:#fff">${esc(o.customerName)}</strong><br>
-        📞 <a style="color:var(--gold-bright)" href="tel:${esc(o.phone)}">${esc(o.phone)}</a><br>
-        📍 ${esc(o.location)}<br>
-        💰 <strong style="color:var(--gold)">${o.total} ريال</strong> — ${esc(o.payment)}
-        ${o.notes?`<br>📝 ${esc(o.notes)}`:""}</div>
-      ${o.housePhoto&&o.housePhoto.startsWith("data:image/")?`<img src="${o.housePhoto}" alt="" style="width:100%;max-height:160px;object-fit:cover;border-radius:10px;margin-top:8px;border:1px solid var(--gold-dim)">`:""}
-      ${btn}</div>`;
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span class="s-num">#${id}</span><span class="s-state">${STATE_TXT[o.status]||""}</span></div>
+      <div style="font-size:.8rem;color:var(--text-muted);margin-bottom:8px">${t}${o.staff_name?` • الموظف: ${esc(o.staff_name)}`:""}</div>
+      <div style="font-size:.92rem;margin-bottom:8px">${(o.items||[]).map(i=>`• ${esc(i.name)} (${esc(i.label)}) × ${Number(i.qty)}`).join("<br>")}</div>
+      <div style="font-size:.86rem;color:var(--text-muted);line-height:1.8">
+        👤 <strong style="color:#fff">${esc(o.customer_name)}</strong><br>
+        📞 <a class="lnk" href="tel:${esc(o.phone)}">${esc(o.phone)}</a><br>
+        📍 ${esc(o.area)} — <a class="lnk" href="${mapsUrl(o)}" target="_blank" rel="noopener noreferrer">فتح في خرائط قوقل</a><br>
+        💰 <strong style="color:var(--gold)">${Number(o.total)} ريال</strong> — ${esc(o.payment)}${o.notes?`<br>📝 ${esc(o.notes)}`:""}</div>
+      ${o.has_photo?`<div id="ph_${id}"><button class="pick-btn" style="margin-top:8px" onclick="showPhoto('${id}')">🖼 عرض صورة الباب</button></div>`:""}
+      <div class="s-actions">${btn}<button class="del-btn" onclick="askDelete('one','${id}')">🗑</button></div></div>`;
   }).join("");
+}
+async function showPhoto(id){
+  const box=document.getElementById("ph_"+id);
+  try{
+    const p=await rpc("staff_get_photo",{p_token:staffToken,p_id:id});
+    if(p&&/^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/.test(p)){box.innerHTML=`<img src="${p}" alt="" style="width:100%;max-height:200px;object-fit:cover;border-radius:10px;margin-top:8px;border:1px solid var(--gold-dim)">`;}
+  }catch(e){showTopBanner("تعذّر تحميل الصورة",e.message,6000);}
 }
 async function staffAct(id,status){
   const name=staffNameInput.value.trim();
   if(!name){showTopBanner("اكتب اسمك","اكتب اسمك في الأعلى أولاً.");staffNameInput.focus();return;}
   try{
-    const patch={status};
-    if(status==="accepted")patch.staffName=name;
-    await store.patch(id,patch);
-  }catch{showTopBanner("تعذّر التحديث","تأكد من الإنترنت.");return;}
+    const ok=await rpc("staff_update_status",{p_token:staffToken,p_id:id,p_status:status,p_staff:name});
+    if(!ok)showTopBanner("تنبيه","الطلب تغيّرت حالته من موظف آخر.");
+  }catch(e){showTopBanner("تعذّر التحديث",e.message,8000);return;}
   pollStaff();
+}
+function askDelete(scope,id){
+  pendingDel={scope,id:id||""};
+  delTitle.textContent=scope==="one"?`حذف الطلب #${id}`:(scope==="delivered"?"حذف كل الطلبات المكتملة":"حذف كل الطلبات النشطة");
+  delPw.value="";openModal("deleteModal");setTimeout(()=>delPw.focus(),50);
+}
+async function confirmDelete(){
+  if(!pendingDel||!delPw.value)return;
+  try{
+    const r=await rpc("staff_delete_orders",{p_token:staffToken,p_password:delPw.value,p_scope:pendingDel.scope,p_id:pendingDel.id});
+    if(!r.ok){showTopBanner("لم يتم الحذف",r.error,9000);return;}
+    delPw.value="";closeModal("deleteModal");showTopBanner("تم الحذف","عدد الطلبات المحذوفة: "+r.deleted);pollStaff();
+  }catch(e){if(/SESSION/.test(e.message)){closeModal("deleteModal");staffLocalLogout();}showTopBanner("تعذّر الحذف",e.message,8000);}
 }
 
 /* ================= الغبار الذهبي ================= */
