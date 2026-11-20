@@ -45,7 +45,6 @@
             z-index: 900;
         }
 
-        /* زر سري مخفي جداً أعلى يسار */
         .secret-dot-btn {
             position: fixed;
             top: 4px;
@@ -60,7 +59,6 @@
             opacity: 0.06;
         }
 
-        /* إشعار علوي */
         .top-push-banner {
             position: fixed;
             top: -120px;
@@ -97,8 +95,8 @@
         .push-content span { color: var(--text-muted); font-size: 0.85rem; }
 
         .app-shell {
-            max-width: 1320px;
-            margin: 18px auto 100px;
+            max-width: 920px;
+            margin: 18px auto 105px;
             padding: 22px;
             border: 2px solid var(--gold-dim);
             border-radius: 26px;
@@ -107,7 +105,7 @@
             position: relative;
         }
 
-        .hero { text-align: center; padding: 16px 10px 26px; }
+        .hero { text-align: center; padding: 16px 10px 24px; }
 
         .badge {
             display: inline-block;
@@ -154,11 +152,9 @@
             font-size: 0.95rem;
         }
 
-        /* تتبع الطلب النشط */
         .live-order-tracker {
             display: none;
             margin: 18px auto 24px;
-            max-width: 900px;
             background: linear-gradient(135deg, rgba(34, 18, 44, 0.96), rgba(18, 10, 24, 0.98));
             border: 1.5px solid var(--gold);
             border-radius: 20px;
@@ -187,45 +183,12 @@
             font-size: 0.9rem;
         }
 
-        .filter-bar { display: flex; flex-direction: column; gap: 14px; margin-bottom: 24px; }
-
-        .search-input {
-            width: 100%;
-            max-width: 520px;
-            margin: 0 auto;
-            padding: 12px 20px;
-            border-radius: 50px;
-            border: 1.5px solid var(--gold-dim);
-            background: var(--bg-panel);
-            color: #fff;
-            font-size: 1rem;
-            outline: none;
+        /* المنيو كامل تحت بعض بعمود واحد واضح */
+        .menu-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
         }
-
-        .search-input:focus { border-color: var(--gold); }
-
-        .cats-scroll { display: flex; gap: 9px; overflow-x: auto; padding-bottom: 8px; }
-
-        .cat-btn {
-            background: var(--bg-panel);
-            color: var(--text-muted);
-            border: 1px solid var(--gold-dim);
-            padding: 8px 16px;
-            border-radius: 50px;
-            white-space: nowrap;
-            cursor: pointer;
-            font-weight: 700;
-            font-size: 0.9rem;
-            transition: 0.25s;
-        }
-
-        .cat-btn.active, .cat-btn:hover {
-            background: linear-gradient(135deg, var(--gold), #c78f1d);
-            color: #130915;
-            border-color: var(--gold-bright);
-        }
-
-        .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 22px; }
 
         .sec-card {
             background: var(--bg-card);
@@ -476,7 +439,6 @@
             margin-top: 8px;
         }
 
-        /* لوحة الموظفين المخصصة */
         .staff-header-box {
             background: rgba(245, 195, 81, 0.08);
             border: 1px solid var(--gold-dim);
@@ -516,7 +478,6 @@
 
         @media (max-width: 600px) {
             .app-shell { margin: 10px 8px 108px; padding: 14px; }
-            .menu-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -546,7 +507,6 @@
             </div>
         </header>
 
-        <!-- تتبع الطلب النشط للزبون فقط (يُحذف بعد الاستلام) -->
         <section class="live-order-tracker" id="orderTracker">
             <div class="tracker-top">
                 <div>
@@ -558,14 +518,11 @@
             <p id="trackMsg" style="color: #fff; font-weight: 800;"></p>
         </section>
 
-        <div class="filter-bar">
-            <input type="text" class="search-input" id="searchInput" placeholder="ابحث عن أي صنف في المنيو..." oninput="renderMenu()">
-            <div class="cats-scroll" id="catsScroll"></div>
-        </div>
-
-        <main class="menu-grid" id="menuGrid"></main>
+        <!-- المنيو كامل تحت بعض من دون بحث -->
+        <main class="menu-stack" id="menuGrid"></main>
     </div>
 
+    <!-- شريط السلة والشراء السفلي -->
     <div class="bottom-buy-bar">
         <div class="buy-summary">
             المختار: <span id="pickedCount">0</span> | المجموع: <span id="pickedTotal">0 ريال</span>
@@ -723,11 +680,8 @@
     </div>
 
     <script>
-        /* =========================================================
-           إعدادات السيرفر (Supabase) + الكود السري
-        ========================================================= */
         const SUPABASE_URL = "https://ajvqhpccizwdzzidyntx.supabase.co";
-        const SUPABASE_ANON_KEY = "sb_publishable_Xla3LF-8cvb-n5nTI1iDhw_a7p3Wbl4"; // الصق هنا كامل مفتاح Publishable key الذي نسخته من Supabase
+        const SUPABASE_ANON_KEY = "sb_publishable_XIa3LF-8cvb-n5nTI1..."; // تأكد من وضع مفتاح Publishable key الكامل هنا
         const SECRET_CODE = "11133334";
 
         const hasServerConfig =
@@ -987,7 +941,6 @@
         const ACTIVE_CLIENT_ORDER_KEY = "hala_server_active_order_id";
         const STAFF_NAME_KEY = "hala_staff_session_name";
 
-        let activeCategory = "الكل";
         let cart = [];
         let selectedPayment = "";
         let housePhotoDataUrl = "";
@@ -1009,55 +962,29 @@
         function openModal(id) { document.getElementById(id).classList.add("open"); }
         function closeModal(id) { document.getElementById(id).classList.remove("open"); }
 
-        function renderCategories() {
-            const bar = document.getElementById("catsScroll");
-            const cats = ["الكل", ...menuSections.map(s => s.title)];
-            bar.innerHTML = cats.map(c => `
-                <button class="cat-btn ${activeCategory === c ? 'active' : ''}" onclick="setCat('${c}')">${c}</button>
-            `).join('');
-        }
-
-        function setCat(c) {
-            activeCategory = c;
-            renderCategories();
-            renderMenu();
-        }
-
-        function renderMenu() {
+        /* عرض المنيو كامل تحت بعض بدون بحث */
+        function renderFullMenu() {
             const grid = document.getElementById("menuGrid");
-            const q = document.getElementById("searchInput").value.trim().toLowerCase();
-            const secs = activeCategory === "الكل" ? menuSections : menuSections.filter(s => s.title === activeCategory);
-            let html = "";
-
-            secs.forEach(sec => {
-                const items = sec.items.filter(it =>
-                    it.name.toLowerCase().includes(q) || (it.desc && it.desc.toLowerCase().includes(q))
-                );
-                if (!items.length) return;
-
-                html += `
-                    <section class="sec-card">
-                        <div class="sec-title">${sec.title}</div>
-                        ${items.map(it => `
-                            <div class="item-row">
-                                <div>
-                                    <div class="item-name">${it.name}</div>
-                                    ${it.desc ? `<div class="item-desc">${it.desc}</div>` : ''}
-                                </div>
-                                <div class="price-btns">
-                                    ${it.prices.map(pr => `
-                                        <button class="pick-btn" onclick="addItem('${it.name.replace(/'/g, "\\'")}', '${pr.l.replace(/'/g, "\\'")}', ${pr.p})">
-                                            ${pr.l} • ${pr.p}
-                                        </button>
-                                    `).join('')}
-                                </div>
+            grid.innerHTML = menuSections.map(sec => `
+                <section class="sec-card">
+                    <div class="sec-title">${sec.title}</div>
+                    ${sec.items.map(it => `
+                        <div class="item-row">
+                            <div>
+                                <div class="item-name">${it.name}</div>
+                                ${it.desc ? `<div class="item-desc">${it.desc}</div>` : ''}
                             </div>
-                        `).join('')}
-                    </section>
-                `;
-            });
-
-            grid.innerHTML = html || `<p style="color:var(--text-muted); text-align:center; grid-column:1/-1;">لا يوجد صنف مطابق.</p>`;
+                            <div class="price-btns">
+                                ${it.prices.map(pr => `
+                                    <button class="pick-btn" onclick="addItem('${it.name.replace(/'/g, "\\'")}', '${pr.l.replace(/'/g, "\\'")}', ${pr.p})">
+                                        ${pr.l} • ${pr.p}
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `).join('')}
+                </section>
+            `).join('');
         }
 
         function addItem(name, label, price) {
@@ -1188,7 +1115,6 @@
             reader.readAsDataURL(file);
         }
 
-        /* إرسال الطلب للسيرفر (ترقيم يبدأ من #0000) */
         async function submitOrderToServer(e) {
             e.preventDefault();
             if (!hasServerConfig) {
@@ -1304,9 +1230,6 @@
             }
         }
 
-        /* =========================================================
-           قائمة الموظفين المخصصة (زر واحد في كل مرحلة + حذف بعد الاستلام)
-        ========================================================= */
         document.getElementById("secretBtn").addEventListener("click", () => {
             document.getElementById("secretCodeInput").value = "";
             openModal("secretCodeModal");
@@ -1415,7 +1338,6 @@
             document.querySelectorAll("#starsRow .star-btn").forEach((b, idx) => b.classList.toggle("active", idx < ratingValue));
         }
 
-        /* بعد إرسال التقييم يُحذف الطلب من السيرفر ولا يُحفظ */
         async function submitRatingAndDeleteOrder() {
             if (!ratingValue) {
                 showTopBanner("التقييم", "اختر عدد النجوم أولاً.");
@@ -1436,4 +1358,55 @@
 
         function subscribeRealtime() {
             if (!hasServerConfig) return;
-            realtimeChannel = sb
+            realtimeChannel = sbClient
+                .channel("public:orders")
+                .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, async () => {
+                    await syncActiveCustomerOrder();
+                    if (document.getElementById("staffDashboardModal").classList.contains("open")) {
+                        await loadStaffOrdersFromServer();
+                    }
+                })
+                .subscribe();
+        }
+
+        const dustCanvas = document.getElementById("goldDustCanvas");
+        const dustCtx = dustCanvas.getContext("2d");
+        let dustParticles = [];
+
+        function resizeDust() {
+            dustCanvas.width = window.innerWidth;
+            dustCanvas.height = window.innerHeight;
+        }
+        window.addEventListener("resize", resizeDust);
+        resizeDust();
+
+        class Dust {
+            constructor() { this.spawn(true); }
+            spawn(randomLife = false) {
+                const edge = Math.random();
+                if (edge < 0.35) {
+                    this.x = dustCanvas.width - (Math.random() * 85);
+                    this.y = Math.random() * dustCanvas.height;
+                } else if (edge < 0.70) {
+                    this.x = Math.random() * 85;
+                    this.y = Math.random() * dustCanvas.height;
+                } else if (edge < 0.85) {
+                    this.x = Math.random() * dustCanvas.width;
+                    this.y = Math.random() * 85;
+                } else {
+                    this.x = Math.random() * dustCanvas.width;
+                    this.y = dustCanvas.height - (Math.random() * 85);
+                }
+                this.r = Math.random() * 2 + 0.6;
+                this.vx = (Math.random() - 0.5) * 0.4;
+                this.vy = -Math.random() * 0.45 - 0.15;
+                this.maxLife = Math.random() * 140 + 80;
+                this.life = randomLife ? Math.floor(Math.random() * this.maxLife) : 0;
+                this.peak = Math.random() * 0.75 + 0.2;
+            }
+            step() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.life++;
+                if (this.life >= this.maxLife) this.spawn(false);
+            }
