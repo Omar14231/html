@@ -726,12 +726,14 @@
         /* =========================================================
            إعدادات السيرفر (Supabase) + الكود السري
         ========================================================= */
-        const SUPABASE_URL = "ضع_رابط_المشروع_هنا";
-        const SUPABASE_ANON_KEY = "ضع_المفتاح_العام_هنا";
+        const SUPABASE_URL = "https://ajvqhpccizwdzzidyntx.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_Xla3LF-8cvb-n5nTI1iDhw_a7p3Wbl4"; // الصق هنا كامل مفتاح Publishable key الذي نسخته من Supabase
         const SECRET_CODE = "11133334";
 
         const hasServerConfig =
-            !SUPABASE_URL.includes("ضع_") && !SUPABASE_ANON_KEY.includes("ضع_");
+            Boolean(SUPABASE_URL) &&
+            Boolean(SUPABASE_ANON_KEY) &&
+            !SUPABASE_ANON_KEY.includes("...");
 
         const sbClient = hasServerConfig
             ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
@@ -1190,7 +1192,7 @@
         async function submitOrderToServer(e) {
             e.preventDefault();
             if (!hasServerConfig) {
-                showTopBanner("إعداد السيرفر مطلوب", "ضع رابط ومفتاح Supabase في الكود لتفعيل السيرفر العام.");
+                showTopBanner("مفتاح السيرفر ناقص", "الصق مفتاح Publishable key الكامل في SUPABASE_ANON_KEY داخل الكود.");
                 return;
             }
 
@@ -1328,7 +1330,7 @@
         async function loadStaffOrdersFromServer() {
             if (!hasServerConfig) {
                 document.getElementById("staffOrdersList").innerHTML =
-                    `<p style="text-align:center; color:var(--text-muted); padding:20px;">اربط بيانات Supabase أولاً لتشغيل قائمة الموظفين على السيرفر.</p>`;
+                    `<p style="text-align:center; color:var(--text-muted); padding:20px;">الصق مفتاح Publishable key الكامل في SUPABASE_ANON_KEY داخل الكود.</p>`;
                 return;
             }
 
@@ -1434,85 +1436,4 @@
 
         function subscribeRealtime() {
             if (!hasServerConfig) return;
-            realtimeChannel = sbClient
-                .channel("public:orders")
-                .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, async () => {
-                    await syncActiveCustomerOrder();
-                    if (document.getElementById("staffDashboardModal").classList.contains("open")) {
-                        await loadStaffOrdersFromServer();
-                    }
-                })
-                .subscribe();
-        }
-
-        /* غبار ذهبي على الحواف */
-        const dustCanvas = document.getElementById("goldDustCanvas");
-        const dustCtx = dustCanvas.getContext("2d");
-        let dustParticles = [];
-
-        function resizeDust() {
-            dustCanvas.width = window.innerWidth;
-            dustCanvas.height = window.innerHeight;
-        }
-        window.addEventListener("resize", resizeDust);
-        resizeDust();
-
-        class Dust {
-            constructor() { this.spawn(true); }
-            spawn(randomLife = false) {
-                const edge = Math.random();
-                if (edge < 0.35) {
-                    this.x = dustCanvas.width - (Math.random() * 85);
-                    this.y = Math.random() * dustCanvas.height;
-                } else if (edge < 0.70) {
-                    this.x = Math.random() * 85;
-                    this.y = Math.random() * dustCanvas.height;
-                } else if (edge < 0.85) {
-                    this.x = Math.random() * dustCanvas.width;
-                    this.y = Math.random() * 85;
-                } else {
-                    this.x = Math.random() * dustCanvas.width;
-                    this.y = dustCanvas.height - (Math.random() * 85);
-                }
-                this.r = Math.random() * 2 + 0.6;
-                this.vx = (Math.random() - 0.5) * 0.4;
-                this.vy = -Math.random() * 0.45 - 0.15;
-                this.maxLife = Math.random() * 140 + 80;
-                this.life = randomLife ? Math.floor(Math.random() * this.maxLife) : 0;
-                this.peak = Math.random() * 0.75 + 0.2;
-            }
-            step() {
-                this.x += this.vx;
-                this.y += this.vy;
-                this.life++;
-                if (this.life >= this.maxLife) this.spawn(false);
-            }
-            draw() {
-                const alpha = Math.sin((this.life / this.maxLife) * Math.PI) * this.peak;
-                dustCtx.save();
-                dustCtx.beginPath();
-                dustCtx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
-                dustCtx.fillStyle = `rgba(255, 226, 138, ${alpha})`;
-                dustCtx.shadowBlur = 7;
-                dustCtx.shadowColor = `rgba(245, 195, 81, ${alpha})`;
-                dustCtx.fill();
-                dustCtx.restore();
-            }
-        }
-
-        for (let i = 0; i < 90; i++) dustParticles.push(new Dust());
-        function loopDust() {
-            dustCtx.clearRect(0, 0, dustCanvas.width, dustCanvas.height);
-            dustParticles.forEach(p => { p.step(); p.draw(); });
-            requestAnimationFrame(loopDust);
-        }
-
-        renderCategories();
-        renderMenu();
-        updateCartBar();
-        subscribeRealtime();
-        syncActiveCustomerOrder();
-        loopDust();
-    </script>
-</body>
-</html>
+            realtimeChannel = sb
